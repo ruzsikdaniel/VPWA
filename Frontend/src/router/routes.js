@@ -9,7 +9,7 @@ const routes = [
   },
   {
     path: '/create',
-    component: () => import('pages/CreateAccount.vue'),
+    component: () => import('src/pages/SignUp.vue'),
   },
 
   // Always leave this as last one,

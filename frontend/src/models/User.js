@@ -2,12 +2,12 @@ export function createUser({
     id,
     firstName,
     lastName,
-    nickName,
+    nickname,
     email,
     password,
     color,
     channels = [],
     messages = []
 }) {
-    return { id, firstName, lastName, nickName, email, password, color, channels, messages};
+    return { id, firstName, lastName, nickname, email, password, color, channels, messages};
 }

@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 
-export const isLoggedIn = ref(false)
-export const name = ref('')
-export const surname = ref('')
-export const nickname = ref('')
-export const email = ref('')
-export const password = ref('')
-export const confirmPassword = ref('')
+export const ISLOGGEDIN = ref(false)
+export const FIRSTNAME = ref('')
+export const LASTNAME = ref('')
+export const NICKNAME = ref('')
+export const EMAIL = ref('')
+export const PASSWORD = ref('')
+export const CONFIRMPASSWORD = ref('')

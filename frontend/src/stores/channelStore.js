@@ -4,6 +4,7 @@ import { createChannel } from 'src/models/Channel'
 
 export const useChannelStore = defineStore('channel', () => {
   const channels = ref([])
+  const selectedChannel = ref(null)
 
   function loadChannels() {
     channels.value = [
@@ -16,6 +17,7 @@ export const useChannelStore = defineStore('channel', () => {
         members: ['test_user1'],
         messages: ['test_message1']
       }),
+
       createChannel({
         id: 'C2',
         ownerId: 'test_user1',
@@ -26,6 +28,15 @@ export const useChannelStore = defineStore('channel', () => {
         messages: []
       })
     ]
+
+    if(channels.value.length > 0){
+      selectedChannel.value = channels.value[0]
+    }
   }
-  return { channels, loadChannels }
+
+  function selectChannel(channelId){
+    selectedChannel.value = channelId.value.find(c => c.id === channelId)
+  }
+
+  return { channels, selectedChannel, loadChannels, selectChannel}
 })
