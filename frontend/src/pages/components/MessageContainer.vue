@@ -1,30 +1,46 @@
 <template>
-    <div class="message-container">
-        <div class="profile-picture">NS</div>
-        <div>
-            <div class="username">Name Surname</div>
-            <div class="message-text">
-            Messagedddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-            </div>
-        </div>
+  <div class="message">
+    <div class="profile-picture">
+      {{ message.senderId }}
     </div>
+    <div>
+      <div class="username">
+        {{ message.senderId }} <!-- user.firstname + user.lastname -->
+      </div>
+      <div class="message-text">
+        {{ message.text }}
+      </div>
+    </div>
+  </div>
 </template>
 
+
 <script setup>
+import { defineProps } from 'vue';
+
+const props = defineProps({
+  message: {
+    type: Object,
+    required: true
+  }
+})
+
+// format date code
 
 </script>
 
 <style lang="scss" scoped>
 /* Message */
 
-.message-container {
+.message {
   display: flex;
   align-items: start;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1rem;  
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.message-container:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.message:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .profile-picture {
@@ -39,7 +55,7 @@
   font-weight: bold;
   font-size: 18px;
 
-  background-color: $profile-red;
+  background-color: $profile-red; // the sender user's color
   margin: 0 0.5rem;
 }
 

@@ -2,7 +2,8 @@
     <aside class="ChannelBar">
       <h2>Channels</h2>
       <ul>
-        <li v-for="channel in channels" :key="channel.id">
+        <li v-for="channel in channels" :key="channel.id" 
+          @click="select(channel.id)" :class="{ active: selectedChannel && selectedChannel.id === channel.id }">
           <div>{{ channel.id }}</div>
           <div>{{ channel.name }}</div>
         </li>
@@ -16,6 +17,11 @@ import { useChannelStore } from 'src/stores/channelStore';
 
 const channelStore = useChannelStore()
 const channels = computed(() => channelStore.channels)
+const selectedChannel = computed(() => channelStore.selectedChannel)
+
+function select(channelId){
+  channelStore.selectChannel(channelId)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -80,7 +86,7 @@ const channels = computed(() => channelStore.channels)
 }
 
 .ChannelBar li:nth-child(8n + 1) div:first-child {
-  background-color: $profile-red;
+  background-color: var(--profile-red);
 }
 
 .ChannelBar li:nth-child(8n + 2) div:first-child {

@@ -1,23 +1,32 @@
 <template>
   <div class="content">
-    <div class="selected-channel">
-        <div>SC</div>
-        <div>Selected Channel</div>
+    <div class="selected-channel" v-if="selectedChannel">
+        <div :style="{ backgroundColor: `var(--profile-${selectedChannel.color})`}">
+          {{ selectedChannel.id }}
+        </div>
+        <div>
+          {{ selectedChannel.name }}
+        </div>
+    </div>
+    <div v-else class="selected-channel">
+      <div>--</div>
+      <div>No channel selected</div>
     </div>
 
-    <div class="messages-container" v-for="message in messages" :key="message.id">
-      <MessageContainer />                
+    <div class="messages-container">
+      <MessageContainer v-for="message in selectedChannel.messages" :key="message.id" :message="message"/>                
     </div>
   </div>
 </template>
 
 
 <script setup>
-import { useMessageStore } from 'src/stores/messageStore';
+import { useChannelStore } from 'src/stores/channelStore';
 import MessageContainer from './MessageContainer.vue';
+import { computed } from 'vue';
 
-const messageStore = useMessageStore()
-const messages = messageStore.messages
+const channelStore = useChannelStore()
+const selectedChannel = computed(() => channelStore.selectedChannel)
 </script>
 
 <style lang="scss" scoped>
@@ -64,7 +73,7 @@ const messages = messageStore.messages
   font-weight: bold;
   font-size: 14px;
 
-  background-color: $profile-green;
+  background-color: inherit;
 }
 
 .selected-channel div:nth-child(2) {

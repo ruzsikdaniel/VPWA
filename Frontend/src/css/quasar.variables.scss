@@ -26,3 +26,14 @@ $profile-orange: #b88225;
 $profile-light-blue: #175958;
 $profile-yellow: #706c1b;
 $profile-grey: #414141;
+
+:root{
+    --profile-red: #{$profile-red};
+    --profile-blue: #{$profile-blue};
+    --profile-green: #{$profile-green};
+    --profile-pink: #{$profile-pink};
+    --profile-orange: #{$profile-orange};
+    --profile-light-blue: #{$profile-light-blue};
+    --profile-yellow: #{$profile-yellow};
+    --profile-grey: #{$profile-grey};
+}
