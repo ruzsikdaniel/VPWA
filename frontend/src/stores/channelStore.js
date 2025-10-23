@@ -23,14 +23,12 @@ export const useChannelStore = defineStore('channel', () => {
             channelId: 'C1',
             text: 'This is Channel 1'
           }),
-
           createMessage({
             id: 'M2',
             senderId: 'U0',
             channelId: 'C1',
             text: 'This is a sample text.'
-          }),
-
+          })
         ]
       }),
 

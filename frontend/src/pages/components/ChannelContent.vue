@@ -18,6 +18,8 @@
         <MessageContainer v-for="message in selectedChannel.messages" :key="message.id" :message="message"/>                
       </div>
     </div>
+    
+    <InputContainer />
   </div>
 </template>
 
@@ -26,6 +28,7 @@
 import { useChannelStore } from 'src/stores/channelStore';
 import MessageContainer from './MessageContainer.vue';
 import { computed } from 'vue';
+import InputContainer from './InputContainer.vue'
 
 const channelStore = useChannelStore()
 const selectedChannel = computed(() => channelStore.selectedChannel)

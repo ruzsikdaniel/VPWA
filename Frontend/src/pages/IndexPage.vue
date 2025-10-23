@@ -10,8 +10,6 @@
 
       <!-- Chat / content area -->
       <ChannelContent />
-
-      <InputContainer />
     </div>
   </div>
 </template>
@@ -21,7 +19,6 @@ import { useRouter } from 'vue-router'
 import ChannelBar from './components/ChannelBar.vue'
 import NavBar from './components/NavBar.vue'
 import ChannelContent from './components/ChannelContent.vue'
-import InputContainer from './components/InputContainer.vue'
 import { ISLOGGEDIN } from 'src/stores/globalStates'
 import { useChannelStore } from 'src/stores/channelStore'
 
@@ -45,9 +42,6 @@ if (ISLOGGEDIN.value === false) {
   background: radial-gradient(circle at top left, $primary-bg-1, $primary-bg-2);
 }
 
-/* sidebar */
-
-
 /* --- Main area --- */
 .main {
   flex: 1;
@@ -55,9 +49,4 @@ if (ISLOGGEDIN.value === false) {
   flex-direction: column;
   max-height: 100vh;
 }
-
-
-
-
-
 </style>

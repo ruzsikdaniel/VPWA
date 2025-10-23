@@ -8,10 +8,10 @@ export const useMessageStore = defineStore('message', () => {
   function loadMessages() {
     messages.value = [
       createMessage({
-        id: 'test_message1',
-        senderId: 'test_user1',
-        channelId: 'test_channel1',
-        text: 'This is a sample text.',
+        id: 'M0',
+        senderId: 'U0',
+        channelId: 'C1',
+        text: 'This is a sample text in channel 1.',
         timestamp: '2025-10-15T23:37:18Z',
         recipientId: null
       })
