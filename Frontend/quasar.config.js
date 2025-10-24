@@ -11,9 +11,20 @@ export default defineConfig((/* ctx */) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [
-      'pinia'
-    ],
+    boot: ['pinia'],
+
+    framework: {
+      plugins: ['Notify'],
+      config: {
+        notify: {
+          color: 'gray',
+          textColor: 'white',
+          //icon: 'check',
+          position: 'top',
+          timeout: 3000,
+        },
+      },
+    },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -78,7 +89,7 @@ export default defineConfig((/* ctx */) => {
       open: true, // opens browser window automatically
     },
 
-    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
+    /*  // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
       config: {},
 
@@ -94,7 +105,7 @@ export default defineConfig((/* ctx */) => {
 
       // Quasar plugins
       plugins: [],
-    },
+    },*/
 
     // animations: 'all', // --- includes all animations
     // https://v2.quasar.dev/options/animations
