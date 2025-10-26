@@ -3,14 +3,14 @@
     <h2>Channels</h2>
 
     <aside class="inner-bar">
-      <ul class="invited-chanels">
+      <ul class="channel-invite">
         <li>
-          <div>IC</div>
-          <div>Channel you were invited to</div>
+          <div>CI</div>
+          <div>Invite to new channel</div>
         </li>
       </ul>
 
-      <ul class="other-channels">
+      <ul class="channels">
         <li
           v-for="channel in channels"
           :key="channel.id"
@@ -22,8 +22,8 @@
         </li>
       </ul>
 
-      <div class="create">
-        <button>Create</button>
+      <div class="create-channel">
+        <button>Create channel</button>
       </div>
     </aside>
   </div>
@@ -75,14 +75,14 @@ function select(channelId) {
   position: relative; /* Makes this the reference for absolute positioning of the button */
 }
 
-.invited-chanels {
+.channel-invite {
   margin: 0 0;
   padding: 1rem;
   padding-left: 0.5rem;
   border-bottom: 1px $primary solid;
 }
 
-.other-channels {
+.channels {
   margin: 0 0;
   padding: 1rem;
   padding-left: 0.5rem;
@@ -151,7 +151,7 @@ li div:first-child {
   background-color: $profile-grey;
 }
 
-.create {
+.create-channel {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -162,7 +162,7 @@ li div:first-child {
   left: 0;
 }
 
-.create button {
+.create-channel button {
   background-color: rgb(0, 60, 0);
   color: white;
   border: none;
@@ -172,7 +172,7 @@ li div:first-child {
   height: 2rem;
 }
 
-.create button:hover {
+.create-channel button:hover {
   background-color: rgba(0, 60, 0, 0.8);
   cursor: pointer;
 }

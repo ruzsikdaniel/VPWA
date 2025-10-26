@@ -44,17 +44,19 @@ const showCommands = ref(false)
 const selectedCommandIndex = ref(0)
 
 const availableCommands = [
-  { name: '/list', description: 'Show users in this chanel' },
-  { name: '/help', description: 'Show help information' },
+  { name: '/list', description: 'Show users in this channel' },
+  { name: '/help', description: 'Show information' },
   { name: '/clear', description: 'Clear chat history' },
   { name: '/settings', description: 'Open settings' },
 ]
 
-// // Send message on enter, navigate commands with arrow keys
+// Send message on enter, navigate commands with arrow keys
 const filteredCommands = computed(() => {
-  if (!message.value.startsWith('/')) return []
+  if (!message.value.startsWith('/')) 
+    return []
 
   const query = message.value.toLowerCase()
+  
   return availableCommands.filter((cmd) => cmd.name.toLowerCase().startsWith(query))
 })
 
@@ -63,14 +65,17 @@ function handleKeydown(e) {
   if (showCommands.value) {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      selectedCommandIndex.value = (selectedCommandIndex.value + 1) % filteredCommands.value.length
-    } else if (e.key === 'ArrowUp') {
+      selectedCommandIndex.value = 
+        (selectedCommandIndex.value + 1) % filteredCommands.value.length
+    } 
+    else if (e.key === 'ArrowUp') {
       e.preventDefault()
       selectedCommandIndex.value =
         selectedCommandIndex.value === 0
           ? filteredCommands.value.length - 1
           : selectedCommandIndex.value - 1
-    } else if (e.key === 'Enter' && filteredCommands.value.length > 0) {
+    } 
+    else if (e.key === 'Enter' && filteredCommands.value.length > 0) {
       e.preventDefault()
       if (filteredCommands.value[selectedCommandIndex.value]) {
         selectCommand(filteredCommands.value[selectedCommandIndex.value])
@@ -90,7 +95,7 @@ function selectCommand(command) {
 
   if (message.value === '/list') {
     Notify.create({
-      message: 'Users here: @User1, @User2 ... and you!',
+      message: 'List of users in this channnel: @User1, @User2 ... and you!',
     })
   } else if (message.value === '/help') {
     Notify.create({
@@ -105,7 +110,7 @@ function selectCommand(command) {
       message: '/settings',
     })
   }
-
+  
   message.value = ''
 
   showCommands.value = false
@@ -139,7 +144,8 @@ onMounted(() => {
 
 function sendMessage() {
   const text = message.value.trim()
-  if (!text) return
+  if (!text) 
+    return
 
   // Handle commands
 

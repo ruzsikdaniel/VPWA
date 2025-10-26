@@ -10,18 +10,20 @@
         </div>
       </div>
 
-      <div class="typing">User is typing probably idk...</div>
+      <div class="typing">User is typing ...</div>
 
-      <div class="leave">
+      <div class="leave-channel">
         <button>Leave</button>
       </div>
     </div>
+
     <div v-else class="selected-channel">
       <div>--</div>
       <div>No channel selected</div>
     </div>
+
     <div class="messages-outer">
-      <q-infinite-scroll @load="loadMoreMessages" reverse :offset="250" :disable="!hasMoreMessages">
+      <q-infinite-scroll reverse @load="loadMoreMessages"  :offset="250" :disable="!hasMoreMessages">
         <template v-slot:loading>
           <div class="row justify-center q-my-md">
             <q-spinner-dots color="primary" size="40px" />
@@ -37,6 +39,7 @@
         </div>
       </q-infinite-scroll>
     </div>
+
     <InputContainer />
   </div>
 </template>
@@ -66,21 +69,13 @@ const loadMoreMessages = async (index, done) => {
   }
 
   try {
-    // Fetch older messages from your API
-    // Example: const olderMessages = await fetchMessages(selectedChannel.value.id, currentPage.value)
-
-    // Simulate API call for demonstration
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // Add messages to the store (prepend older messages)
-    // channelStore.prependMessages(selectedChannel.value.id, olderMessages)
-
-    // For demo - you'll replace this with actual logic:
-    const hasMore = currentPage.value < 5 // Replace with actual check
+    const hasMore = currentPage.value < 5
 
     if (!hasMore) {
       hasMoreMessages.value = false
-      done(true) // Stop infinite scroll
+      done(true)
     } else {
       currentPage.value++
       done() // Continue watching
@@ -163,14 +158,14 @@ const loadMoreMessages = async (index, done) => {
   flex: 1;
 }
 
-.leave {
+.leave-channel {
   display: flex;
   align-items: center;
   justify-content: end;
   flex: 1;
 }
 
-.leave button {
+.leave-channel button {
   background-color: rgb(113, 18, 18);
   color: white;
   border: none;
@@ -180,7 +175,7 @@ const loadMoreMessages = async (index, done) => {
   height: 2rem;
 }
 
-.leave button:hover {
+.leave-channel button:hover {
   background-color: rgba(113, 18, 18, 0.8);
   cursor: pointer;
 }
