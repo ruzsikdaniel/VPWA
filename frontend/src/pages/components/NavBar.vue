@@ -1,38 +1,50 @@
 <template>
-    <header class="nav-bar">
-      <div></div>
-      <div class="top-bar-right">
-        <div class="user-info" 
-          v-bind:title="`${FIRSTNAME} ${LASTNAME} ${NICKNAME} ${EMAIL}`"
-          @click.stop="toggleStatusList"
-        >
-          <span class="user-label">
-            <span class="status-dot" :class="statusClass"></span>
-            Logged in: {{ NICKNAME }}
-          </span>
+  <header class="nav-bar">
+    <div></div>
+    <div class="top-bar-right">
+      <div
+        class="user-info"
+        v-bind:title="`${FIRSTNAME} ${LASTNAME} ${NICKNAME} ${EMAIL}`"
+        @click.stop="toggleStatusList"
+      >
+        <span class="user-label">
+          <span class="status-dot" :class="statusClass"></span>
+          Logged in: {{ NICKNAME }}
+        </span>
 
-          <div v-if="showStatus" class="status-list">
-            <div 
-              v-for="(status, index) in statuses" 
-              :key="index" 
-              class="status-item"
-              @click.stop="setStatus(status)"
-            >
-              {{ status }}
-            </div>
+        <div v-if="showStatus" class="status-list">
+          <div
+            v-for="(status, index) in statuses"
+            :key="index"
+            class="status-item"
+            @click.stop="setStatus(status)"
+          >
+            {{ status }}
           </div>
         </div>
-
-        <button v-on:click="logOut">Log Out</button>
       </div>
-    </header>
+
+      <button v-on:click="logOut">Log Out</button>
+    </div>
+  </header>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router';
-import { onMounted, onBeforeUnmount } from 'vue';
-import { ISLOGGEDIN, FIRSTNAME, LASTNAME, NICKNAME, EMAIL, PASSWORD, CONFIRMPASSWORD} from 'src/stores/globalStates';
+import { useRouter } from 'vue-router'
+import { onMounted, onBeforeUnmount } from 'vue'
+import {
+  ISLOGGEDIN,
+  FIRSTNAME,
+  LASTNAME,
+  NICKNAME,
+  EMAIL,
+  PASSWORD,
+  CONFIRMPASSWORD,
+  TOKEN,
+  PROFILECOLOR,
+} from 'src/stores/globalStates'
+import { api } from 'boot/axios'
 
 const router = useRouter()
 
@@ -40,18 +52,18 @@ const showStatus = ref(false)
 const statuses = ['Online', 'Do Not Disturb', 'Offline']
 const currentStatus = ref('Online')
 
-function toggleStatusList(){
+function toggleStatusList() {
   showStatus.value = !showStatus.value
 }
 
-function setStatus(status){
+function setStatus(status) {
   currentStatus.value = status
   showStatus.value = false
   console.log(`New status: ${status}`)
 }
 
 const statusClass = computed(() => {
-  switch(currentStatus.value){
+  switch (currentStatus.value) {
     case 'Online':
       return 'dot-online'
     case 'Do Not Disturb':
@@ -77,16 +89,33 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// Handle log out
-const logOut = () => {
-  ISLOGGEDIN.value = false
-  FIRSTNAME.value = ''
-  LASTNAME.value = ''
-  NICKNAME.value = ''
-  EMAIL.value = ''
-  PASSWORD.value = ''
-  CONFIRMPASSWORD.value = ''
-  router.push('/signin')
+async function logOut() {
+  const token = TOKEN.value
+  if (!token) return
+
+  try {
+    await api.post(
+      '/auth/logout',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    FIRSTNAME.value = ''
+    LASTNAME.value = ''
+    PROFILECOLOR.value = ''
+    NICKNAME.value = ''
+    EMAIL.value = ''
+    PASSWORD.value = ''
+    CONFIRMPASSWORD.value = ''
+    TOKEN.value = ''
+    ISLOGGEDIN.value = false
+    router.push('/signin')
+  } catch (err) {
+    console.error(err)
+  }
 }
 </script>
 
@@ -127,24 +156,24 @@ const logOut = () => {
   cursor: pointer;
 }
 
-.user-label{
+.user-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.25rem
+  gap: 0.25rem;
 }
 
-.user-info{
+.user-info {
   position: relative;
   cursor: pointer;
   color: white;
 }
 
-.user-info:hover{
-  color: rgba(150, 150, 150, 0.95)
+.user-info:hover {
+  color: rgba(150, 150, 150, 0.95);
 }
 
-.status-list{
+.status-list {
   position: absolute;
   top: 120%;
   left: 0;
@@ -156,18 +185,18 @@ const logOut = () => {
   z-index: 10;
 }
 
-.status-item{
+.status-item {
   padding: 0.5rem 1rem;
   color: white;
   font-size: 14px;
 }
 
-.status-item:hover{
+.status-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
 }
 
-.status-dot{
+.status-dot {
   display: inline-block;
   width: 10px;
   height: 10px;

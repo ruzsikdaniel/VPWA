@@ -30,21 +30,34 @@
 </template>
 
 <script setup>
-import { ISLOGGEDIN, NICKNAME, PASSWORD } from 'src/stores/globalStates'
+import {
+  ISLOGGEDIN,
+  NICKNAME,
+  PASSWORD,
+  TOKEN,
+  FIRSTNAME,
+  LASTNAME,
+  EMAIL,
+  PROFILECOLOR,
+} from 'src/stores/globalStates'
 import { useRouter } from 'vue-router'
-import { useUserStore } from 'src/stores/userStore'
-import { useChannelStore } from 'src/stores/channelStore'
-import { onMounted } from 'vue'
+import { api } from 'boot/axios'
 
-const userStore = useUserStore()
+// import { useChannelStore } from 'src/stores/channelStore'
+// import { useUserStore } from 'src/stores/userStore'
+// import { onMounted } from 'vue'
+
+// const userStore = useUserStore()
 const router = useRouter()
 
+/*
 onMounted(() => {
   userStore.loadUsers()
   console.log('users', userStore.users)
 })
+*/
 
-function handleSubmit() {
+/*function handleSubmit() {
   const user = userStore.findUser(NICKNAME.value, PASSWORD.value)
 
   if (user) {
@@ -57,6 +70,34 @@ function handleSubmit() {
     router.push('/')
   } else {
     ISLOGGEDIN.value = false
+  }
+}*/
+
+async function handleSubmit() {
+  const credentials = {
+    nickname: NICKNAME.value,
+    password: PASSWORD.value,
+  }
+
+  try {
+    const response = await api.post('/auth/login', credentials)
+    const { user, token } = response.data
+
+    console.log(user)
+
+    NICKNAME.value = user.nickname
+    PASSWORD.value = ''
+    TOKEN.value = token.token
+    FIRSTNAME.value = user.firstName
+    LASTNAME.value = user.lastName
+    PROFILECOLOR.value = user.profileColor
+    EMAIL.value = user.email
+    ISLOGGEDIN.value = true
+
+    router.push('/')
+  } catch (err) {
+    console.error(err)
+    throw err
   }
 }
 </script>

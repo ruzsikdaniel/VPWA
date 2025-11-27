@@ -47,14 +47,18 @@ import {
   EMAIL,
   PASSWORD,
   CONFIRMPASSWORD,
+  PROFILECOLOR,
+  TOKEN,
 } from 'src/stores/globalStates'
 import { useRouter } from 'vue-router'
-import { useUserStore } from 'src/stores/userStore'
+//import { useUserStore } from 'src/stores/userStore'
+import { api } from 'boot/axios'
 
-const userStore = useUserStore()
+//const userStore = useUserStore()
 
 const router = useRouter()
 
+/*
 function handleSubmit() {
   if (PASSWORD.value === CONFIRMPASSWORD.value) {
     userStore.addUser(FIRSTNAME, LASTNAME, NICKNAME, EMAIL, PASSWORD)
@@ -63,6 +67,48 @@ function handleSubmit() {
 
     ISLOGGEDIN.value = true
     router.push('/')
+  } else {
+    alert("Passwords don't match")
+  }
+}
+*/
+
+async function handleSubmit() {
+  if (PASSWORD.value === CONFIRMPASSWORD.value) {
+    // TODO: implement assigning random color
+    let profileColor = 'red'
+
+    const userData = {
+      firstName: FIRSTNAME.value,
+      lastName: LASTNAME.value,
+      nickname: NICKNAME.value,
+      email: EMAIL.value,
+      password: PASSWORD.value,
+      profileColor: profileColor,
+    }
+
+    try {
+      const response = await api.post('/auth/register', userData)
+      const { user, token } = response.data
+
+      console.log(user)
+
+      NICKNAME.value = user.nickname
+      PASSWORD.value = ''
+      CONFIRMPASSWORD.value = ''
+      TOKEN.value = token.token
+      FIRSTNAME.value = user.firstName
+      LASTNAME.value = user.lastName
+      EMAIL.value = user.email
+      PROFILECOLOR.value = user.profileColor
+      ISLOGGEDIN.value = true
+      router.push('/')
+
+      return user
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   } else {
     alert("Passwords don't match")
   }
