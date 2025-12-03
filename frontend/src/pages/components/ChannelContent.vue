@@ -13,7 +13,7 @@
       <div class="typing">User is typing ...</div>
 
       <div class="leave-channel">
-        <button>Leave</button>
+        <button @click="leave()">Leave</button>
       </div>
     </div>
 
@@ -56,13 +56,35 @@ import MessageContainer from './MessageContainer.vue'
 import InputContainer from './InputContainer.vue'
 import { watch } from 'vue'
 import { api } from 'boot/axios'
-import { SELECTEDCHANNEL, MESSAGES, getProfileText } from 'src/stores/globalStates'
+import { SELECTEDCHANNEL, MESSAGES, getProfileText, NICKNAME } from 'src/stores/globalStates'
 
 watch(SELECTEDCHANNEL, async (newValue) => {
   if (newValue) {
     await loadMessages()
   }
 })
+
+async function leave() {
+  let channelId = SELECTEDCHANNEL.value.id
+  let nickname = NICKNAME.value
+
+  try {
+    const response = await api.delete('channels/', {
+      data: { channelId, nickname },
+    })
+
+    const data = response.data
+
+    if (data.status === 200) {
+      alert(data.message)
+      window.location.reload()
+    } else {
+      alert(data.message)
+    }
+  } catch (err) {
+    console.error('Error leaving channel:', err)
+  }
+}
 
 async function loadMessages() {
   try {

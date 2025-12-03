@@ -12,7 +12,7 @@
 
       <ul class="channels">
         <li
-          v-for="channel in channels"
+          v-for="channel in CHANNELS"
           :key="channel.id"
           @click="select(channel.id)"
           :class="{ active: SELECTEDCHANNEL.id === channel.id }"
@@ -33,11 +33,9 @@
 
 <script setup>
 import { api } from 'boot/axios'
-import { NICKNAME, SELECTEDCHANNEL, getProfileText } from 'src/stores/globalStates'
+import { NICKNAME, SELECTEDCHANNEL, getProfileText, CHANNELS } from 'src/stores/globalStates'
 import { onMounted, ref } from 'vue'
 import { createWebSocket, disconnectWebSocket } from 'src/stores/ws'
-
-const channels = ref([])
 
 onMounted(async () => {
   await loadChannels()
@@ -46,10 +44,10 @@ onMounted(async () => {
 async function loadChannels() {
   try {
     const response = await api.get(`channels/${NICKNAME.value}`)
-    channels.value = response.data
-    select(channels.value[0].id)
+    CHANNELS.value = response.data
+    select(CHANNELS.value[0].id)
 
-    console.log(channels.value)
+    console.log(CHANNELS.value)
   } catch (err) {
     console.error('Error loading channels:', err)
   }
@@ -57,7 +55,7 @@ async function loadChannels() {
 
 function select(channelId) {
   disconnectWebSocket()
-  SELECTEDCHANNEL.value = channels.value.find((item) => item.id === channelId)
+  SELECTEDCHANNEL.value = CHANNELS.value.find((item) => item.id === channelId)
 
   if (SELECTEDCHANNEL.value.id) {
     createWebSocket(SELECTEDCHANNEL.value.id)
@@ -84,7 +82,7 @@ async function createChannel() {
     console.log('Channel created:', response.data)
 
     // Add new channel to the list immediately
-    channels.value.push(response.data)
+    CHANNELS.value.push(response.data)
 
     // Auto-select it
     select(response.data.id)

@@ -35,6 +35,8 @@ export const SELECTEDCHANNEL = usePersistentRef('SELECTEDCHANNEL', null)
 // Messages from currently selected channel
 export const MESSAGES = ref([])
 
+export const CHANNELS = ref([])
+
 export const AVAILABLECOLORS = [
   'red',
   'blue',
@@ -46,6 +48,7 @@ export const AVAILABLECOLORS = [
   'grey',
 ]
 
+// Functions
 export function getProfileText(chanelName) {
   if (!chanelName) return ''
 
