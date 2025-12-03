@@ -20,12 +20,8 @@ import ChannelBar from './components/ChannelBar.vue'
 import NavBar from './components/NavBar.vue'
 import ChannelContent from './components/ChannelContent.vue'
 import { ISLOGGEDIN } from 'src/stores/globalStates'
-// import { useChannelStore } from 'src/stores/channelStore'
 
 const router = useRouter()
-// const channelStore = useChannelStore()
-
-// console.log('Kanaly: ', channelStore.channels)
 
 // Redirect if not signed in
 if (ISLOGGEDIN.value === false) {

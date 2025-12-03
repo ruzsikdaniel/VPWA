@@ -34,25 +34,22 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-// import { useChannelStore } from 'src/stores/channelStore'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { NICKNAME, SELECTEDCHANNEL, MESSAGES } from 'src/stores/globalStates'
+import { NICKNAME, SELECTEDCHANNEL, MESSAGES, createChannel } from 'src/stores/globalStates'
 import { sendWSMessage } from 'src/stores/ws'
 
-// const channelStore = useChannelStore()
 const message = ref('')
-const autoResize = ref(null)
 const showCommands = ref(false)
 const selectedCommandIndex = ref(0)
+const autoResize = ref(null)
 
 const availableCommands = [
   { name: '/list', description: 'Show users in this channel' },
-  { name: '/help', description: 'Show information' },
-  { name: '/clear', description: 'Clear chat history' },
-  { name: '/settings', description: 'Open settings' },
+  { name: '/join channelName [private]', description: 'Create or join channel' },
 ]
 
+// Compute witch commands to show based on input
 const filteredCommands = computed(() => {
   if (!message.value.startsWith('/')) return []
 
@@ -88,17 +85,32 @@ function handleKeydown(e) {
   }
 }
 
-function selectCommand(command) {
+// Commands Implementation
+async function selectCommand(command) {
   message.value = command.name
 
   if (message.value === '/list') {
     Notify.create({
       message: 'List of users in this channnel: @User1, @User2 ... and you!',
     })
-  } else if (message.value === '/help') {
-    Notify.create({
-      message: '/help',
-    })
+  } else if (message.value.startsWith('/join')) {
+    // split the command into separate words
+    const words = message.value.trim().split(/\s+/)
+
+    const channelName = words[1]
+    let channelStatus = words[2]
+
+    if (channelStatus === undefined) {
+      channelStatus = 'public'
+    }
+
+    if (channelName && (channelStatus === 'public' || channelStatus === 'private')) {
+      await createChannel(channelName, channelStatus)
+    } else {
+      Notify.create({
+        message: 'Command Syntax is wrong',
+      })
+    }
   } else if (message.value === '/clear') {
     Notify.create({
       message: '/clear',
@@ -107,9 +119,13 @@ function selectCommand(command) {
     Notify.create({
       message: '/settings',
     })
+  } else {
+    Notify.create({
+      message: `No such command: ${message.value}`,
+    })
   }
 
-  message.value = ' '
+  message.value = ''
 
   showCommands.value = false
 }
@@ -134,15 +150,18 @@ function resizeTextarea() {
 
 onMounted(() => {
   resizeTextarea() // run it when component is mounted to set the initial height
-
-  /*if (channelStore.channels.length === 0) {
-    channelStore.loadChannels()
-  }*/
 })
 
 async function sendMessage() {
   const text = message.value.trim()
   if (!text) return
+
+  // Handle commands if not handled earlier (sending with sent button or no commands matched)
+  if (text.startsWith('/')) {
+    let command = { name: text }
+    selectCommand(command)
+    return
+  }
 
   // Send Message
   try {

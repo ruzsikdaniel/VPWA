@@ -15,8 +15,10 @@
           <li
             v-for="channel in CHANNELS"
             :key="channel.id"
-            @click="select(channel.id)"
-            :class="{ active: SELECTEDCHANNEL.id === channel.id }"
+            @click="selectChannel(channel.id)"
+            :class="{
+              active: SELECTEDCHANNEL && SELECTEDCHANNEL.id && SELECTEDCHANNEL.id === channel.id,
+            }"
           >
             <div v-bind:style="{ backgroundColor: `var(--profile-${channel.color})` }">
               {{ getProfileText(channel.name) }}
@@ -45,7 +47,7 @@
           </div>
 
           <br />
-          <button @click="createChannel">Submit</button>
+          <button @click="handleChannelCreation">Submit</button>
           <button @click="showPopup = false">Cancel</button>
         </div>
       </div>
@@ -60,10 +62,10 @@ import {
   SELECTEDCHANNEL,
   getProfileText,
   CHANNELS,
-  selectRandomColor,
+  selectChannel,
+  createChannel,
 } from 'src/stores/globalStates'
 import { onMounted, ref } from 'vue'
-import { createWebSocket, disconnectWebSocket } from 'src/stores/ws'
 
 onMounted(async () => {
   await loadChannels()
@@ -73,7 +75,9 @@ async function loadChannels() {
   try {
     const response = await api.get(`channels/${NICKNAME.value}`)
     CHANNELS.value = response.data
-    select(CHANNELS.value[0].id)
+    if (CHANNELS.value[0].id) {
+      selectChannel(CHANNELS.value[0].id)
+    }
 
     console.log(CHANNELS.value)
   } catch (err) {
@@ -81,23 +85,11 @@ async function loadChannels() {
   }
 }
 
-function select(channelId) {
-  disconnectWebSocket()
-  SELECTEDCHANNEL.value = CHANNELS.value.find((item) => item.id === channelId)
-
-  if (SELECTEDCHANNEL.value.id) {
-    createWebSocket(SELECTEDCHANNEL.value.id)
-  } else {
-    console.log('error connectiong websocket')
-  }
-}
-
 const showPopup = ref(false)
 const name = ref('')
-const color = ref('red')
 const status = ref('public')
 
-async function createChannel() {
+async function handleChannelCreation() {
   if (!name.value.trim()) {
     alert('Please enter your name')
     return
@@ -107,37 +99,7 @@ async function createChannel() {
     return
   }
 
-  color.value = selectRandomColor()
-
-  try {
-    const payload = {
-      name: name.value.trim(),
-      color: color.value,
-      status: status.value,
-      creatorNickname: NICKNAME.value,
-    }
-
-    const response = await api.post('/channels', payload)
-
-    if (
-      response.data.status &&
-      response.data.status !== 200 &&
-      response.data.status !== 'public' &&
-      response.data.status !== 'private'
-    ) {
-      alert(response.data.message)
-    } else {
-      console.log('Channel created:', response.data)
-
-      // Add new channel to the list immediately
-      CHANNELS.value.push(response.data)
-
-      // Auto-select it
-      select(response.data.id)
-    }
-  } catch (err) {
-    console.error('Error creating channel:', err)
-  }
+  await createChannel(name.value.trim(), status.value)
 
   // Reset
   name.value = ''
