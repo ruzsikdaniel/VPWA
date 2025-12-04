@@ -97,22 +97,65 @@ router
 
     // POST '/channels/invite' -> Invite user to the channel
     router.post('/invite', async ({ request }) => {
-      // InviterNickname, UserNickname, ChannelName
-      //
-      // get channel by ChannelName
-      //
-      // if channelStatus is private:
-      //    get row from channel_users by InviterNickname and ChannelName
-      //    if Inviter is admin:
-      //        invite User to the Channnel by adding row to channel_users
-      //    else:
-      //        send message(cant invite because only admins can invite to private channels)
-      //
-      // else:
-      //    invite User to the Channnel by adding row to channel_users
-      //
-      //
-      // p.s. if channel or any of the users dont exist send an error message
+      const { inviterNickname, userNickname, channelName } = request.only([
+        'inviterNickname',
+        'userNickname',
+        'channelName',
+      ])
+
+      try {
+        // get channel by ChannelName
+        const channel = await Channel.query().where('name', channelName).firstOrFail()
+
+        if (channel.status === 'private') {
+          // get row from channel_users by InviterNickname and ChannelName
+          const inviter = await User.query().where('nickname', inviterNickname).firstOrFail()
+          const inviterMembership = await ChannelUser.query()
+            .where('user_id', inviter.id)
+            .andWhere('channel_id', channel.id)
+            .firstOrFail()
+
+          if (inviterMembership.role === 'admin') {
+            // invite User to the Channnel by adding row to channel_users
+            const user = await User.query().where('nickname', userNickname).firstOrFail()
+            await ChannelUser.create({
+              userId: user.id,
+              channelId: channel.id,
+              role: 'user',
+            })
+            return {
+              status: 201,
+              message: 'User added successfully',
+              user: user.nickname,
+              channel: channel.name,
+            }
+          } else {
+            return {
+              status: 400,
+              message: 'Cant invite because only admins can invite to private channels',
+            }
+          }
+        } else {
+          const user = await User.query().where('nickname', userNickname).firstOrFail()
+          await ChannelUser.create({
+            userId: user.id,
+            channelId: channel.id,
+            role: 'user',
+          })
+          return {
+            status: 201,
+            message: 'User added successfully',
+            user: user.nickname,
+            channel: channel.name,
+          }
+        }
+      } catch (error) {
+        // TODO: if channel or any of the users dont exist send correct error message
+        return {
+          status: 500,
+          message: 'Something went wrong',
+        }
+      }
     })
 
     // DELETE '/channels' -> Leave channel
