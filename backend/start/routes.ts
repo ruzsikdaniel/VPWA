@@ -43,6 +43,27 @@ router
       return channels
     })
 
+    // GET '/channels/get_users/:channelId' -> get the list of users in the channel
+    router.get('get_users/:channelId', async ({ params }) => {
+      const users = await User.query()
+        .join('channel_users', 'users.id', 'channel_users.user_id')
+        .where('channel_users.channel_id', params.channelId)
+        .select('users.*', 'channel_users.role')
+
+      let userArray = []
+
+      for (let i = 0; i < users.length; i++) {
+        userArray.push({
+          nickname: users[i].nickname,
+          role: users[i].$extras.role,
+        })
+      }
+
+      console.log(userArray)
+
+      return userArray
+    })
+
     // GET '/channels/status/:channelId'-> get channel status by channel id
     router.get('/status/:channelId', async ({ params }) => {
       const channel = await Channel.query().where('id', params.channelId).firstOrFail()

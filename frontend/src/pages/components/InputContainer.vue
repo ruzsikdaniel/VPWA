@@ -93,9 +93,29 @@ async function selectCommand(command) {
 
   // LIST
   if (message.value === '/list') {
-    Notify.create({
-      message: 'List of users in this channnel: @User1, @User2 ... and you!',
-    })
+    if (SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.id) {
+      try {
+        const response = await api.get(`channels/get_users/${SELECTEDCHANNEL.value.id}`)
+
+        let notification = 'List of users in this channel: '
+
+        for (let i = 0; i < response.data.length; i++) {
+          notification += `@${response.data[i].nickname} (${response.data[i].role})`
+
+          if (i !== response.data.length - 1) {
+            notification += ', '
+          }
+        }
+
+        Notify.create({
+          message: notification,
+        })
+      } catch (err) {
+        console.error('Error getting list of users:', err)
+      }
+    } else {
+      console.log('Error getting list of users, no channel selected')
+    }
   }
   // JOIN
   else if (message.value.startsWith('/join')) {
@@ -140,13 +160,13 @@ async function selectCommand(command) {
 
     const userNickname = words[1]
 
-    const payload = {
-      inviterNickname: NICKNAME.value,
-      userNickname: userNickname,
-      channelName: SELECTEDCHANNEL.value.name,
-    }
+    if (userNickname && SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.name) {
+      const payload = {
+        inviterNickname: NICKNAME.value,
+        userNickname: userNickname,
+        channelName: SELECTEDCHANNEL.value.name,
+      }
 
-    if (userNickname) {
       try {
         const response = await api.post('/channels/invite', payload)
 
@@ -165,9 +185,13 @@ async function selectCommand(command) {
       } catch (err) {
         console.error('Error creating channel:', err)
       }
+    } else if (!SELECTEDCHANNEL.value) {
+      Notify.create({
+        message: 'No channel selected',
+      })
     } else {
       Notify.create({
-        message: 'Command Syntax is wrong',
+        message: 'Command synta is wrong',
       })
     }
   }
