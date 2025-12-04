@@ -47,6 +47,7 @@ const autoResize = ref(null)
 const availableCommands = [
   { name: '/list', description: 'Show users in this channel' },
   { name: '/join channelName [private]', description: 'Create or join channel' },
+  { name: '/status', description: 'Display the status of the channel you are currently in' },
 ]
 
 // Compute witch commands to show based on input
@@ -89,11 +90,14 @@ function handleKeydown(e) {
 async function selectCommand(command) {
   message.value = command.name
 
+  // LIST
   if (message.value === '/list') {
     Notify.create({
       message: 'List of users in this channnel: @User1, @User2 ... and you!',
     })
-  } else if (message.value.startsWith('/join')) {
+  }
+  // JOIN
+  else if (message.value.startsWith('/join')) {
     // split the command into separate words
     const words = message.value.trim().split(/\s+/)
 
@@ -111,14 +115,22 @@ async function selectCommand(command) {
         message: 'Command Syntax is wrong',
       })
     }
-  } else if (message.value === '/clear') {
-    Notify.create({
-      message: '/clear',
-    })
-  } else if (message.value === '/settings') {
-    Notify.create({
-      message: '/settings',
-    })
+  }
+  // STATUS
+  else if (message.value === '/status') {
+    if (SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.id) {
+      try {
+        const response = await api.get(`channels/status/${SELECTEDCHANNEL.value.id}`)
+
+        Notify.create({
+          message: `Channel ${response.data.name} is ${response.data.status}`,
+        })
+      } catch (err) {
+        console.error('Error getting channel status:', err)
+      }
+    } else {
+      console.log('Error getting seleccted channel status, no channel selected')
+    }
   } else {
     Notify.create({
       message: `No such command: ${message.value}`,

@@ -31,7 +31,7 @@ router
 /* --- /channels --- */
 router
   .group(() => {
-    // GET channels by nickname
+    // GET '/channels/:nickname' -> get user's channel list
     router.get('/:nickname', async ({ params }) => {
       const user = await User.query().where('nickname', params.nickname).firstOrFail()
 
@@ -43,7 +43,14 @@ router
       return channels
     })
 
-    // POST a new channel (create)
+    // GET '/channels/status/:channelId'-> get channel status by channel id
+    router.get('/status/:channelId', async ({ params }) => {
+      const channel = await Channel.query().where('id', params.channelId).firstOrFail()
+
+      return { status: channel.status, name: channel.name }
+    })
+
+    // POST '/channels' -> create a new channel
     router.post('/', async ({ request }) => {
       // Get channel data from request
       const { name, color, status } = request.only(['name', 'color', 'status'])
@@ -88,7 +95,27 @@ router
       }
     })
 
-    // Leave channel
+    // POST '/channels/invite' -> Invite user to the channel
+    router.post('/invite', async ({ request }) => {
+      // InviterNickname, UserNickname, ChannelName
+      //
+      // get channel by ChannelName
+      //
+      // if channelStatus is private:
+      //    get row from channel_users by InviterNickname and ChannelName
+      //    if Inviter is admin:
+      //        invite User to the Channnel by adding row to channel_users
+      //    else:
+      //        send message(cant invite because only admins can invite to private channels)
+      //
+      // else:
+      //    invite User to the Channnel by adding row to channel_users
+      //
+      //
+      // p.s. if channel or any of the users dont exist send an error message
+    })
+
+    // DELETE '/channels' -> Leave channel
     router.delete('/', async ({ request }) => {
       const { channelId, nickname } = request.only(['channelId', 'nickname'])
 

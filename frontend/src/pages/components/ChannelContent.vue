@@ -55,7 +55,13 @@ import MessageContainer from './MessageContainer.vue'
 import InputContainer from './InputContainer.vue'
 import { watch } from 'vue'
 import { api } from 'boot/axios'
-import { SELECTEDCHANNEL, MESSAGES, getProfileText, NICKNAME } from 'src/stores/globalStates'
+import {
+  CHANNELS,
+  SELECTEDCHANNEL,
+  MESSAGES,
+  getProfileText,
+  NICKNAME,
+} from 'src/stores/globalStates'
 
 watch(SELECTEDCHANNEL, async (newValue) => {
   if (newValue) {
@@ -75,8 +81,13 @@ async function leave() {
     const data = response.data
 
     if (data.status === 200) {
-      alert(data.message)
-      window.location.reload()
+      //alert(data.message)
+
+      // Remove channel from the list
+      CHANNELS.value = CHANNELS.value.filter((channel) => channel.id !== channelId)
+
+      // Set selected channel to none after deletion
+      SELECTEDCHANNEL.value = null
     } else {
       alert(data.message)
     }
