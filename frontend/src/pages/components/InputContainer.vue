@@ -130,7 +130,38 @@ async function selectCommand(command) {
     }
 
     if (channelName && (channelStatus === 'public' || channelStatus === 'private')) {
-      await createChannel(channelName, channelStatus)
+      let response = await createChannel(channelName, channelStatus)
+
+      // If channel alredy exists invite yourself to the channel instead of creating it
+      if (response === 'Channel with this name alredy exists') {
+        const payload = {
+          inviterNickname: NICKNAME.value,
+          userNickname: NICKNAME.value,
+          channelName: channelName,
+        }
+
+        try {
+          const response = await api.post('/channels/invite', payload)
+
+          // if successful
+          if (response.data.status === 201) {
+            Notify.create({
+              message: `Invited you to the channel: ${response.data.channel}`,
+            })
+
+            // Reload the page to display the new channel
+            location.reload()
+          }
+          // if exeption
+          else {
+            Notify.create({
+              message: response.data.message,
+            })
+          }
+        } catch (err) {
+          console.error('Error inviting to the channel channel:', err)
+        }
+      }
     } else {
       Notify.create({
         message: 'Command Syntax is wrong',
@@ -183,7 +214,7 @@ async function selectCommand(command) {
           })
         }
       } catch (err) {
-        console.error('Error creating channel:', err)
+        console.error('Error inviting to th chennel channel:', err)
       }
     } else if (!SELECTEDCHANNEL.value) {
       Notify.create({

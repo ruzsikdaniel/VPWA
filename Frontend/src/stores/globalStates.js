@@ -99,7 +99,7 @@ export async function createChannel(channelName, channelStatus) {
       response.data.status !== 'public' &&
       response.data.status !== 'private'
     ) {
-      alert(response.data.message)
+      return response.data.message
     } else {
       console.log('Channel created:', response.data)
 

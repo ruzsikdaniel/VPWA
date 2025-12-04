@@ -59,8 +59,6 @@ router
         })
       }
 
-      console.log(userArray)
-
       return userArray
     })
 

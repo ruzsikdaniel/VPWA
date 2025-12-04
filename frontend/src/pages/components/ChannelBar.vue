@@ -99,7 +99,11 @@ async function handleChannelCreation() {
     return
   }
 
-  await createChannel(name.value.trim(), status.value)
+  let response = await createChannel(name.value.replace(/\s+/g, ''), status.value) // remove all spaces from channel name before creation
+
+  if (response === 'Channel with this name alredy exists') {
+    alert(response)
+  }
 
   // Reset
   name.value = ''
