@@ -284,8 +284,8 @@ async function sendMessage() {
     console.log('Sending message: ', response.data)
 
     // Add new message to the list immediately
-    MESSAGES.value.push(response.data)
-
+    //MESSAGES.value.push(response.data)
+    console.log('messages', MESSAGES.value)
     // Brodecat message to web socket
     sendWSMessage(response.data)
   } catch (err) {

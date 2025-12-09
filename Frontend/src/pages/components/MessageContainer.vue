@@ -1,7 +1,7 @@
 <template>
   <div class="message">
-    <div class="profile-picture">
-      {{ message.userId }}
+    <div class="profile-picture" :style="{backgroundColor: message.profileColor, color: checkContrastColor(message.profileColor)}">
+      {{ getInitials(message.nickname) }}
     </div>
     <div>
       <div class="username">
@@ -14,7 +14,8 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { checkContrastColor, getInitials } from 'src/stores/globalStates'
+import { defineProps, computed } from 'vue'
 
 const highlight = (text) => {
   let result = text.replace(/\B@(\w+)/g, (match, user) => `<span class="highlight">@${user}</span>`)
@@ -29,7 +30,7 @@ const props = defineProps({
   },
 })
 
-console.log(props)
+//console.log(props)
 
 // format date code
 </script>
@@ -60,7 +61,6 @@ console.log(props)
   font-weight: bold;
   font-size: 18px;
 
-  background-color: $profile-red; // the sender user's color
   margin: 0 0.5rem;
 }
 

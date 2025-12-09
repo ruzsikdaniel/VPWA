@@ -17,6 +17,7 @@ import User from '#models/user'
 
 import AuthController from '#controllers/auth_controller'
 
+
 const authController = new AuthController()
 
 /* --- /auth --- */
@@ -33,14 +34,29 @@ router
   .group(() => {
     // GET '/channels/get_channels/:nickname' -> get user's channel list
     router.get('get_channels/:nickname', async ({ params }) => {
-      const user = await User.query().where('nickname', params.nickname).firstOrFail()
+      const nickname = params.nickname
+      const user = await User.findByOrFail('nickname', nickname)
 
+      const channels = await ChannelUser.query()
+      .where('user_id', user.id)
+      .preload('channel')
+  
+      const channelList = channels.map((ch) => ({
+        id: ch.channel.id,
+        name: ch.channel.name,
+        channelColor: ch.channel.channelColor,
+        status: ch.channel.status,
+        role: ch.role,
+      }))
+      
+      console.warn('channel list: ', channelList)
+/*
       const channels = await Channel.query()
         .join('channel_users', 'channels.id', 'channel_users.channel_id')
         .where('channel_users.user_id', user.id)
         .select('channels.*')
-
-      return channels
+*/
+      return channelList
     })
 
     // GET '/channels/get_users/:channelId' -> get the list of users in the channel
@@ -72,13 +88,13 @@ router
     // POST '/channels' -> create a new channel
     router.post('/', async ({ request }) => {
       // Get channel data from request
-      const { name, color, status } = request.only(['name', 'color', 'status'])
+      const { name, channelColor, status } = request.only(['name', 'channelColor', 'status'])
 
       try {
         // Create the channel
         const channel = await Channel.create({
           name,
-          color,
+          channelColor,
           status,
         })
 
@@ -218,15 +234,29 @@ router
   .group(() => {
     // GET messages by chanelId
     router.get('/:channelId', async ({ params }) => {
-      return Message.query().where('channelId', params.channelId).orderBy('id', 'asc')
+      const messages_per_channel = await Message.query().where('channelId', params.channelId).orderBy('id', 'asc').preload('user')
+
+      console.warn('messages', messages_per_channel)
+
+      let messages = messages_per_channel.map(msg => ({
+        id: msg.id,
+        channelId: msg.channelId,
+        nickname: msg.user.nickname,
+        msgText: msg.msgText,
+        profileColor: msg.user.profileColor,
+        timestamp: msg.createdAt
+      }))
+      
+      console.log('messages i need', messages)
+      return messages
     })
 
     // POST new message
     router.post('/', async ({ request }) => {
-      const { nickname, channel_id, msg_text } = request.only([
+      const { nickname, channel_id, msg_text} = request.only([
         'nickname',
         'channel_id',
-        'msg_text',
+        'msg_text'
       ])
 
       // Find user by nickname
@@ -236,7 +266,7 @@ router
       const message = await Message.create({
         userId: user.id,
         channelId: channel_id,
-        msgText: msg_text,
+        msgText: msg_text
       })
 
       return message

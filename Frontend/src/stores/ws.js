@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { io } from 'socket.io-client'
-import { MESSAGES, NICKNAME } from './globalStates'
+import { MESSAGES, NICKNAME, SELECTEDCHANNEL } from './globalStates'
 
 export const socket = ref(null)
 
@@ -18,6 +18,8 @@ export function createWebSocket(channelId) {
   socket.value.on('connect', () => {
     console.log('[IO] Connected:', socket.value.id)
 
+  //console.warn('messages: ', MESSAGES.value)
+
     // Join the channel (room)
     socket.value.emit('joinChannel', channelId)
   })
@@ -25,7 +27,12 @@ export function createWebSocket(channelId) {
   // Receive broadcast message
   socket.value.on('message', (data) => {
     console.log('[IO] message received:', data)
+    
+    if (data.channelId !== SELECTEDCHANNEL.value?.id) 
+      return
+
     MESSAGES.value.push(data)
+    console.log('MESSAGES.value', MESSAGES.value)
   })
 
   socket.value.on('disconnect', () => {
@@ -40,9 +47,16 @@ export function disconnectWebSocket() {
   }
 }
 
-export function sendWSMessage(channelId, msgText) {
-  if (!socket.value) return console.error('Socket not connected')
+export function sendWSMessage(data) {
+  if (!socket.value) 
+    return console.error('Socket not connected')
+  
+  let channelId = data.channelId
+  let msgText = data.msgText
 
+  console.log('message: ', msgText)
+  console.log('socket response: ', channelId)
+  
   socket.value.emit('message', {
     channelId,
     nickname: NICKNAME.value,

@@ -1,6 +1,7 @@
 import app from '@adonisjs/core/services/app'
 import server from '@adonisjs/core/services/server'
 import { Server } from 'socket.io'
+import User from '#models/user'
 
 let io: Server | null = null
 
@@ -23,15 +24,21 @@ app.ready(() => {
       console.log(`[IO] ${socket.id} joined channel ${channelId}`)
     })
 
-    socket.on('message', (data) => {
+    socket.on('message', async (data) => {
       const { channelId, nickname, msgText } = data
 
-      io!.to(String(channelId)).emit('message', {
+      const user = await User.findBy('nickname', nickname)
+
+      const messagePayload = {
+        id: Date.now(),   // sent to FE - requires id attribute but value is irrelevant
         channelId,
         nickname,
+        profileColor: user?.profileColor,
         msgText,
         timestamp: new Date().toISOString(),
-      })
+      }
+
+      io!.to(String(channelId)).emit('message', messagePayload)
     })
 
     socket.on('disconnect', () => {

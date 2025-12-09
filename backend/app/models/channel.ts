@@ -11,8 +11,8 @@ export default class Channel extends BaseModel {
   @column()
   declare name: string
 
-  @column()
-  declare color: string
+  @column({columnName: 'color'})
+  declare channelColor: string
 
   @column()
   declare status: string // public or private

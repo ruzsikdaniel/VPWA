@@ -6,7 +6,7 @@
       <div class="channel-lists">
         <ul class="channel-invite">
           <li>
-            <div v-bind:style="{ backgroundColor: `var(--profile-green)` }">CI</div>
+            <div v-bind:style="{ backgroundColor: '#555'}">CI</div>
             <div>Invite to new channel</div>
           </li>
         </ul>
@@ -27,8 +27,8 @@
               active: SELECTEDCHANNEL && SELECTEDCHANNEL.id && SELECTEDCHANNEL.id === channel.id,
             }"
           >
-            <div v-bind:style="{ backgroundColor: `var(--profile-${channel.color})` }">
-              {{ getProfileText(channel.name) }}
+            <div v-bind:style="{ backgroundColor: channel.channelColor, color: checkContrastColor(channel.channelColor) }">
+              {{ getInitials(channel.name) }}
             </div>
             <div>{{ channel.name }}</div>
           </li>
@@ -69,13 +69,14 @@ import { api } from 'boot/axios'
 import {
   NICKNAME,
   SELECTEDCHANNEL,
-  getProfileText,
+  getInitials,
   CHANNELS,
   selectChannel,
   createChannel,
   MESSAGES
 } from 'src/stores/globalStates'
 import { onMounted, ref } from 'vue'
+import { checkContrastColor } from 'src/stores/globalStates'
 
 onMounted(async () => {
   await loadChannels()
@@ -85,6 +86,8 @@ async function loadChannels() {
   try {
     const response = await api.get(`channels/get_channels/${NICKNAME.value}`)
     CHANNELS.value = response.data || []
+
+    console.log("CHANNELS loaded:", CHANNELS.value)
 
     if (CHANNELS.value.length === 0){
       console.warn('No channels found for user')

@@ -1,9 +1,9 @@
 <template>
   <div class="content">
-    <div class="top-bar" v-if="SELECTEDCHANNEL">
+    <div class="top-bar" v-if="SELECTEDCHANNEL && SELECTEDCHANNEL.id">
       <div class="selected-channel">
-        <div v-bind:style="{ backgroundColor: `var(--profile-${SELECTEDCHANNEL.color})` }">
-          {{ getProfileText(SELECTEDCHANNEL.name) }}
+        <div v-bind:style="{ backgroundColor: SELECTEDCHANNEL.channelColor, color: checkContrastColor(SELECTEDCHANNEL.channelColor) }">
+          {{ getInitials(SELECTEDCHANNEL.name) }}
         </div>
         <div>
           {{ SELECTEDCHANNEL.name }}
@@ -59,14 +59,15 @@ import {
   CHANNELS,
   SELECTEDCHANNEL,
   MESSAGES,
-  getProfileText,
+  getInitials,
   NICKNAME,
+  checkContrastColor
 } from 'src/stores/globalStates'
 
-watch(SELECTEDCHANNEL, async (newValue) => {
-  if (newValue) {
-    await loadMessages()
-  }
+watch(SELECTEDCHANNEL, async () => {
+  if (!SELECTEDCHANNEL.value || !SELECTEDCHANNEL.value.id)
+    return 
+  await loadMessages()
 })
 
 async function leave() {
@@ -97,14 +98,21 @@ async function leave() {
 }
 
 async function loadMessages() {
+  if (!SELECTEDCHANNEL.value?.id)
+    return
+  
   try {
     const response = await api.get(`messages/${SELECTEDCHANNEL.value.id}`)
     MESSAGES.value = response.data
 
-    console.log(MESSAGES.value)
-    console.log(SELECTEDCHANNEL.value.id)
-    console.log(SELECTEDCHANNEL.value.name)
-    console.log(SELECTEDCHANNEL.value.color)
+    console.log('response data', response.data)
+    console.log('messages', MESSAGES.value)
+    
+
+    //console.log(MESSAGES.value)
+    //console.log(SELECTEDCHANNEL.value.id)
+    //console.log(SELECTEDCHANNEL.value.name)
+    //console.log(SELECTEDCHANNEL.value.color)
   } catch (err) {
     console.error('Error loading messages:', err)
   }
