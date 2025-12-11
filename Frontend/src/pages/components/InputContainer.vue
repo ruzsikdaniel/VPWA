@@ -159,7 +159,7 @@ async function selectCommand(command) {
             })
           }
         } catch (err) {
-          console.error('Error inviting to the channel channel:', err)
+          console.error('Error inviting to the channel:', err)
         }
       }
     } else {
@@ -214,7 +214,7 @@ async function selectCommand(command) {
           })
         }
       } catch (err) {
-        console.error('Error inviting to th chennel channel:', err)
+        console.error('Error inviting to the channel:', err)
       }
     } else if (!SELECTEDCHANNEL.value) {
       Notify.create({
@@ -222,7 +222,7 @@ async function selectCommand(command) {
       })
     } else {
       Notify.create({
-        message: 'Command synta is wrong',
+        message: 'Command syntax is wrong',
       })
     }
   }
