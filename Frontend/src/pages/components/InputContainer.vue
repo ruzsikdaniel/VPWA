@@ -19,7 +19,7 @@
 
     <textarea
       rows="1"
-      placeholder="Type your message here..."
+      :placeholder="$q.screen.lt.sm ? 'Message...' : 'Type your message here...'"
       ref="autoResize"
       v-model="message"
       v-on:input="resizeTextarea"
@@ -28,7 +28,10 @@
     <div style="display: flex; flex-direction: column">
       <div style="flex: 1"></div>
       <!--<button @click="sendMessage">Send</button>-->
-      <button @click="handleSend">Send</button>
+      <button @click="handleSend">
+        <div class="text-lg">Send</div>
+        <div class="text-sm">&gt;</div>
+      </button>
     </div>
   </div>
 </template>
@@ -663,4 +666,19 @@ async function sendMessage() {
   background-color: rgba(114, 37, 111, 0.8);
   cursor: pointer;
 }
+
+.text-sm{
+  display: none;
+}
+
+@media (max-width: 410px) {
+  .text-lg{
+    display: none;
+  }
+
+  .text-sm{
+    display: block;
+  }
+}
+
 </style>

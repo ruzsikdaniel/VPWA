@@ -38,7 +38,14 @@
       </div>
 
       <div class="create-channel">
-        <button @click="showPopup = true">Create channel</button>
+        <button @click="showPopup = true">
+          <div id="create-channel-lg-text">
+            Create channel
+          </div>
+          <div id="create-channel-sm-text">
+            +
+          </div>
+        </button>
       </div>
 
       <!-- Popup Overlay -->
@@ -360,4 +367,37 @@ li div:first-child {
   background-color: rgba(0, 60, 0, 0.8);
   cursor: pointer;
 }
+
+#create-channel-sm-text{
+  display: none;
+}
+
+@media (max-width: 800px){
+  .channel-bar{
+    width: 90px;
+  }
+
+  li div:nth-child(2){
+    display: none;
+  }
+
+  .create-channel button{
+    width: 60px;
+    margin-left: -8px;
+  }
+
+  .create-channel{
+    bottom: 0.5rem
+  }
+
+  #create-channel-lg-text{
+    display: none;
+  }
+
+  #create-channel-sm-text{
+    display: block;
+  }
+}
+
+
 </style>

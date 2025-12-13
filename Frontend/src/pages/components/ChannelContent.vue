@@ -5,7 +5,7 @@
         <div v-bind:style="{ backgroundColor: SELECTEDCHANNEL.channelColor, color: checkContrastColor(SELECTEDCHANNEL.channelColor) }">
           {{ getInitials(SELECTEDCHANNEL.name) }}
         </div>
-        <div>
+        <div v-if="$q.screen.gt.xs">
           {{ SELECTEDCHANNEL.name }}
         </div>
       </div>
@@ -13,7 +13,12 @@
       <div class="typing">User is typing ...</div>
 
       <div class="leave-channel">
-        <button @click="leave()">Leave</button>
+        <button @click="leave()">
+          <div v-if="$q.screen.gt.xs">
+            Leave
+          </div>
+          <div v-else>-</div>
+        </button>
       </div>
     </div>
 
@@ -238,6 +243,16 @@ const loadMoreMessages = async (index, done) => {
 .selected-channel div:nth-child(2) {
   font-weight: bold;
   font-size: 16px;
+}
+
+@media (max-width: 601px) {
+  .selected-channel, .leave-channel{
+    flex: 0 0 30px;
+  }
+
+  .leave-channel button{
+    padding: 0 0 0.8rem;
+  }
 }
 
 .typing {
