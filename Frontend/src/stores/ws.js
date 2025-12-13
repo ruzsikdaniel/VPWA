@@ -161,6 +161,10 @@ function handleChannelUpdate(data){
 
     case 'left':
       console.log('[WS] User left: ', nickname)
+      api.get(`/channels/get_channels/${NICKNAME.value}`)
+        .then(response => {
+          CHANNELS.value = response.data
+        })
       break
 
     case 'deleted':

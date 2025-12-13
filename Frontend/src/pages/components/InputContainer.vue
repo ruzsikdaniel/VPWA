@@ -461,12 +461,12 @@ async function handleCommand(input) {
       
       console.log('cancelling...')
       // any user that leaves the channel
-
-      await api.post('/channels', {
-        data: {
-          channelId: SELECTEDCHANNEL.value.id,
-          nickname: NICKNAME.value
-        }
+      const channel = SELECTEDCHANNEL.value 
+      console.log('channel id', channel.id) 
+      console.log('nickname.value', NICKNAME.value)
+      await api.post('/channels/leave', {
+        channelId: channel.id,
+        nickname: NICKNAME.value
       })
       break
     }
@@ -475,11 +475,9 @@ async function handleCommand(input) {
       
       console.log('quitting...')
       // check if user is admin, then delete the channel
-      await api.delete('/channels', {
-        data: {
-          channelId: SELECTEDCHANNEL.value.id,
-          nickname: NICKNAME.value,
-        },
+      const response = await api.post('/channels/quit', {
+        channelId: SELECTEDCHANNEL.value.id,
+        nickname: NICKNAME.value,
       })
       break
 

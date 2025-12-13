@@ -3,6 +3,7 @@ import Channel from '#models/channel'
 import ChannelUser from '#models/channel_user'
 import User from '#models/user'
 import { getIO } from '#start/socket'
+import Message from '#models/message'
 
 
 // remove from here, make colors centralized for backend
@@ -20,6 +21,9 @@ export const AVAILABLECOLORS = [
 export function selectRandomColor() {
   return AVAILABLECOLORS[Math.floor(Math.random() * AVAILABLECOLORS.length)]
 }
+
+let kick_counter = 0
+let voters = []
 
 export default class ChannelsController {
 
@@ -158,56 +162,68 @@ export default class ChannelsController {
     return {status: 201, message: 'User invited successfully'}
   }
 
-public async revoke({request}: HttpContext){
-  const {adminNickname, userNickname, channelId} = request.only(['adminNickname', 'userNickname', 'channelId'])
-  
-  const channel = await Channel.findOrFail(channelId)
-  const admin = await User.findByOrFail('nickname', adminNickname)
-  const user = await User.findByOrFail('nickname', userNickname)
+  public async revoke({request}: HttpContext){
+    const {adminNickname, userNickname, channelId} = request.only(['adminNickname', 'userNickname', 'channelId'])
+    
+    const channel = await Channel.findOrFail(channelId)
+    const admin = await User.findByOrFail('nickname', adminNickname)
+    const user = await User.findByOrFail('nickname', userNickname)
 
-  const adminMember = await ChannelUser
-    .query()
-    .where('user_id', admin.id)           //
-    .andWhere('channel_id', channelId)    //
-    .firstOrFail()                        //
+    const adminMember = await ChannelUser
+      .query()
+      .where('user_id', admin.id)           //
+      .andWhere('channel_id', channelId)    //
+      .firstOrFail()                        //
 
-  if(adminMember.role !== 'admin'){
-    return {status: 403, message: 'Only admin can revoke users'}
-  }
-
-  // delete the user
-  await ChannelUser
-    .query()
-    .where('user_id', user.id)
-    .andWhere('channel_id', channelId)
-    .delete()
-
-  const io = getIO()
-  io!.to(String(channelId)).emit('event', {
-    type: 'channelUpdate',
-    data: {
-      action: 'revoked',
-      nickname: userNickname,
-      channelId
+    if(adminMember.role !== 'admin'){
+      return {status: 403, message: 'Only admin can revoke users'}
     }
-  })
 
-  return {status: 200, message: 'User revoked successfully'}
-}
+    // delete the user
+    await ChannelUser
+      .query()
+      .where('user_id', user.id)
+      .andWhere('channel_id', channelId)
+      .delete()
+
+    const io = getIO()
+    io!.to(String(channelId)).emit('event', {
+      type: 'channelUpdate',
+      data: {
+        action: 'revoked',
+        nickname: userNickname,
+        channelId
+      }
+    })
+
+    return {status: 200, message: 'User revoked successfully'}
+  }
 
   public async leave({ request }: HttpContext) {
     const { channelId, nickname } = request.only(['channelId', 'nickname'])
 
-    const user = await User.findByOrFail('nickname', nickname)
+    const user = await User.findBy('nickname', nickname)
+    if(!user)
+      return {status: 403, message: 'User not found'}
+    
+    console.log('user that is leaving', user)
+
     const member = await ChannelUser
       .query()
       .where('user_id', user.id)
       .andWhere('channel_id', channelId)
       .firstOrFail()
 
+    console.log('member', member)
+
+    if(!member){
+      return { status: 403, message: 'User is not a member of this channel' }
+    }
+
     // USER LEAVES
     if (member.role === 'user') {
       await member.delete()
+      console.log(`remove the user from channel ${channelId}`, member)
 
       getIO().to(String(channelId)).emit('event', {
         type: 'channelUpdate',
@@ -246,8 +262,57 @@ public async revoke({request}: HttpContext){
     return {status: 403, message: 'Invalid role'}
   }
 
+  public async quit({ request }: HttpContext){
+    const {channelId, nickname} = request.only(['channelId', 'nickname'])
+
+    const user = await User.findBy('nickname', nickname)
+    if(!user)
+      return {status: 403, message: 'User not found'}
+
+    const member = await ChannelUser.query()
+      .where('user_id', user.id)
+      .andWhere('channel_id', channelId)
+      .first()
+
+    if(!member){
+      return { status: 403, message: 'User is not a member of this channel' }
+    }
+
+    if(member.role !== 'admin')
+      return {status: 403, message: 'User is not the admin of this channel'}
+
+    // DELETE ENTIRE CHANNEL
+    await Message.query()               // find every message
+      .where('channel_id', channelId)   // inside the channel
+      .delete()                         // and delete them from DB
+
+    await ChannelUser.query()           // find all channel users
+      .where('channel_id', channelId)   // inside the channel
+      .delete()                         // and delete them from DB
+
+    await Channel.query()       // find every channel
+      .where('id', channelId)   // that is this channel
+      .delete()                 // and delete them
+
+    // WS - broadcast a channelUpdate - deleted event
+    getIO().to(String(channelId)).emit('event',{
+      type: 'channelUpdate',
+      data: {
+        action: 'deleted', 
+        channelId, 
+        nickname
+      },
+    })
+
+    return {status: 200, message: 'Channel deleted'}
+  }
+
   public async status({params}: HttpContext){
     const channel = await Channel.findOrFail(params.channelId)
     return {status: channel.status, name: channel.name}
+  }
+
+  public async kick({request}: HttpContext){
+    
   }
 }
