@@ -20,8 +20,10 @@ import ChannelBar from './components/ChannelBar.vue'
 import NavBar from './components/NavBar.vue'
 import ChannelContent from './components/ChannelContent.vue'
 import { ISLOGGEDIN } from 'src/stores/globalStates'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { initWebSocket } from 'src/stores/ws'
+import { CHANNEL_EVENT } from 'src/stores/channelStore'
+import { Notify } from 'quasar'
 
 const router = useRouter()
 

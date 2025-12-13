@@ -14,7 +14,9 @@ import Message from '#models/message'
 import User from '#models/user'
 
 import AuthController from '#controllers/auth_controller'
-import ChannelsController from '#controllers/channel_controller'
+import ChannelsController from '#controllers/channels_controller'
+import { KickController } from '#controllers/kick_controller'
+import { MemberController } from '#controllers/member_controller'
 
 
 const authController = new AuthController()
@@ -36,14 +38,14 @@ router
     router.get('/status/:channelId', [ChannelsController, 'status'])          // GET '/channels/status/:channelId'-> get channel status by channel id
 
     router.post('/', [ChannelsController, 'create'])        // POST '/channels' -> ChannelsController.create() - create a new channel    
-    router.post('/join', [ChannelsController, 'join'])      // POST '/channels/join -> ChannelsController.join() - join or create new channel to join
-    router.post('/invite', [ChannelsController, 'invite'])  // POST '/channels/invite' -> ChannelsController.invite() - invite user to the channel
-    router.post('/revoke', [ChannelsController, 'revoke'])  // POST '/channels/revoke' -> ChannelsController.revoke() - revoke membership of user in private channel (as admin)
-    router.post('/leave', [ChannelsController, 'leave'])         // POST '/channels/leave' -> ChannelController.leave() - users leaves the channel, admin deletes channel
-    router.post('/quit', [ChannelsController, 'quit'])      // POST '/channels/quit' -> ChannalsController.quit() - admin leaves the channel without deletion
-    router.post('/kick', [ChannelsController, 'kick'])
+    router.post('/join', [MemberController, 'join'])      // POST '/channels/join -> ChannelsController.join() - join or create new channel to join
+    router.post('/invite', [MemberController, 'invite'])  // POST '/channels/invite' -> ChannelsController.invite() - invite user to the channel
+    router.post('/revoke', [MemberController, 'revoke'])  // POST '/channels/revoke' -> ChannelsController.revoke() - revoke membership of user in private channel (as admin)
+    router.post('/leave', [MemberController, 'leave'])         // POST '/channels/leave' -> ChannelController.leave() - users leaves the channel, admin deletes channel
+    router.post('/quit', [MemberController, 'quit'])      // POST '/channels/quit' -> ChannalsController.quit() - admin leaves the channel without deletion
+    router.post('/kick', [KickController, 'kick'])
 
-    router.delete('/', [ChannelsController, 'leave'])   // DELETE '/channels' -> Leave channel
+    router.delete('/', [MemberController, 'leave'])   // DELETE '/channels' -> Leave channel
   })
   .prefix('/channels')
 

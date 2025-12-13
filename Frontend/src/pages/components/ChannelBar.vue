@@ -73,7 +73,6 @@
 
 <script setup>
 import {
-  NICKNAME,
   SELECTEDCHANNEL,
   getInitials,
   CHANNELS,
@@ -82,8 +81,7 @@ import {
 } from 'src/stores/globalStates'
 import { onMounted, ref, watch } from 'vue'
 import { checkContrastColor } from 'src/stores/globalStates'
-import { CHANNEL_EVENT, refreshChannels, selectChannel } from 'src/stores/channelStore'
-import { Notify } from 'quasar'
+import { refreshChannels, selectChannel } from 'src/stores/channelStore'
 
 const showPopup = ref(false)
 const name = ref('')

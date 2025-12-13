@@ -40,7 +40,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { NICKNAME, SELECTEDCHANNEL, MESSAGES, createChannel } from 'src/stores/globalStates'
+import { NICKNAME, SELECTEDCHANNEL } from 'src/stores/globalStates'
 import { sendWSMessage, sendTyping, joinWSChannel } from 'src/stores/ws'
 import { refreshChannels, selectChannel } from 'src/stores/channelStore'
 
@@ -91,153 +91,6 @@ function handleKeydown(e) {
     e.preventDefault()
     handleSend()
   }
-}
-
-// Commands Implementation
-async function selectCommand(command) {
-  message.value = command.name
-
-  // LIST
-  if (message.value === '/list') {
-    if (SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.id) {
-      try {
-        const response = await api.get(`channels/get_users/${SELECTEDCHANNEL.value.id}`)
-
-        let notification = 'List of users in this channel: '
-
-        for (let i = 0; i < response.data.length; i++) {
-          notification += `@${response.data[i].nickname} (${response.data[i].role})`
-
-          if (i !== response.data.length - 1) {
-            notification += ', '
-          }
-        }
-
-        Notify.create({
-          message: notification,
-        })
-      } catch (err) {
-        console.error('Error getting list of users:', err)
-      }
-    } else {
-      console.log('Error getting list of users, no channel selected')
-    }
-  }
-  // JOIN
-  else if (message.value.startsWith('/join')) {
-    // split the command into separate words
-    const words = message.value.trim().split(/\s+/)
-
-    const channelName = words[1]
-    let channelStatus = words[2]
-
-    if (channelStatus === undefined) {
-      channelStatus = 'public'
-    }
-
-    if (channelName && (channelStatus === 'public' || channelStatus === 'private')) {
-      let response = await createChannel(channelName, channelStatus)
-
-      // If channel alredy exists invite yourself to the channel instead of creating it
-      if (response === 'Channel with this name alredy exists') {
-        const payload = {
-          inviterNickname: NICKNAME.value,
-          userNickname: NICKNAME.value,
-          channelName: channelName,
-        }
-
-        try {
-          const response = await api.post('/channels/invite', payload)
-
-          // if successful
-          if (response.data.status === 201) {
-            Notify.create({
-              message: `Invited you to the channel: ${response.data.channel}`,
-            })
-
-            // Reload the page to display the new channel
-            location.reload()
-          }
-          // if exeption
-          else {
-            Notify.create({
-              message: response.data.message,
-            })
-          }
-        } catch (err) {
-          console.error('Error inviting to the channel:', err)
-        }
-      }
-    }
-  }
-  // STATUS
-  else if (message.value === '/status') {
-    if (SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.id) {
-      try {
-        const response = await api.get(`channels/status/${SELECTEDCHANNEL.value.id}`)
-
-        Notify.create({
-          message: `Channel ${response.data.name} is ${response.data.status}`,
-        })
-      } catch (err) {
-        console.error('Error getting channel status:', err)
-      }
-    } else {
-      console.log('Error getting seleccted channel status, no channel selected')
-    }
-  }
-  // INVITE
-  else if (message.value.startsWith('/invite')) {
-    // split the command into separate words
-    const words = message.value.trim().split(/\s+/)
-
-    const userNickname = words[1]
-
-    if (userNickname && SELECTEDCHANNEL.value && SELECTEDCHANNEL.value.name) {
-      const payload = {
-        inviterNickname: NICKNAME.value,
-        userNickname: userNickname,
-        channelName: SELECTEDCHANNEL.value.name,
-      }
-
-      try {
-        const response = await api.post('/channels/invite', payload)
-
-        // if successful
-        if (response.data.status === 201) {
-          Notify.create({
-            message: `${response.data.user} added to the ${response.data.channel} successfully`,
-          })
-        }
-        // if exeption
-        else {
-          Notify.create({
-            message: response.data.message,
-          })
-        }
-      } catch (err) {
-        console.error('Error inviting to the channel:', err)
-      }
-    } else if (!SELECTEDCHANNEL.value) {
-      Notify.create({
-        message: 'No channel selected',
-      })
-    } else {
-      Notify.create({
-        message: 'Command syntax is wrong',
-      })
-    }
-  }
-  // OTHER
-  else {
-    Notify.create({
-      message: `No such command: ${message.value}`,
-    })
-  }
-
-  message.value = ''
-
-  showCommands.value = false
 }
 
 watch(message, () => {
@@ -475,7 +328,7 @@ async function handleCommand(input) {
       
       console.log('quitting...')
       // check if user is admin, then delete the channel
-      const response = await api.post('/channels/quit', {
+      await api.post('/channels/quit', {
         channelId: SELECTEDCHANNEL.value.id,
         nickname: NICKNAME.value,
       })
@@ -529,47 +382,6 @@ async function handleCommand(input) {
     default:
       console.warn('unknown command:', input)
   }
-}
-
-async function sendMessage() {
-  const text = message.value.trim()
-  if (!text) return
-
-  // Handle commands if not handled earlier (sending with sent button or no commands matched)
-  if (text.startsWith('/')) {
-    let command = { name: text }
-    selectCommand(command)
-    return
-  }
-
-  // Send Message
-  try {
-    const payload = {
-      nickname: NICKNAME.value,
-      channel_id: SELECTEDCHANNEL.value.id,
-      msg_text: text,
-    }
-
-    const response = await api.post('/messages', payload)
-
-    console.log('Sending message: ', response.data)
-
-    // Add new message to the list immediately
-    //MESSAGES.value.push(response.data)
-    console.log('messages', MESSAGES.value)
-    // Brodecat message to web socket
-    sendWSMessage(response.data)
-  } catch (err) {
-    console.error('Error sending message:', err)
-  }
-
-  // Send notification
-  Notify.create({
-    message: `You have a new message: ${text}`,
-  })
-
-  message.value = ''
-  resizeTextarea()
 }
 </script>
 

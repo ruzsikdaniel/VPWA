@@ -38,7 +38,7 @@ const props = defineProps({
   },
 })
 
-//console.log(props)
+console.log(props)
 
 // format date code
 </script>
