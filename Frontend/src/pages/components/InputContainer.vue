@@ -38,14 +38,13 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
 import { NICKNAME, SELECTEDCHANNEL, MESSAGES, createChannel } from 'src/stores/globalStates'
-import { sendWSMessage, sendTyping } from 'src/stores/ws'
+import { sendWSMessage, sendTyping, joinWSChannel } from 'src/stores/ws'
+import { refreshChannels, selectChannel } from 'src/stores/channelStore'
 
 const message = ref('')
 const showCommands = ref(false)
 const selectedCommandIndex = ref(0)
 const autoResize = ref(null)
-
-const text = ref('')
 
 const availableCommands = [
   { name: '/list', description: 'Show users in this channel' },
@@ -272,7 +271,7 @@ function typing(){
 async function handleSend(){
   const msg = message.value
   console.log('message to send:', msg)
-  if(!msg.trim() || !SELECTEDCHANNEL.value)
+  if(!msg.trim())
     return
 
   // check if message is command
@@ -337,10 +336,15 @@ async function handleCommand(input) {
       const channelName = words[1]
       let channelType = ''
 
+      // /join channelName private
       if(words[2] == 'private')
         channelType = 'private'
+
+      // /join channelName public || /join channelNane
       else if(words[2] == 'public' || words[2] === undefined)
         channelType = 'public'
+      
+      // third word is not public or private or none
       else{
         Notify.create({
           message: 'Please enter the correct channel type (private/public)',
@@ -348,24 +352,92 @@ async function handleCommand(input) {
         return
       }
 
-      await api.post('/channels/join', {
+      // routes.ts => POST /channels/join => ChannelController.join()
+      const response = await api.post('/channels/join', {
         name: channelName,
         status: channelType,
         nickname: NICKNAME.value
       })      
+
+      const channel = response.data.channel
+
+      // join web socket room
+      joinWSChannel(channel.id)
+
+      // refresh channel list
+      await refreshChannels()
+      
+      // select channel to join
+      selectChannel(channel.id)
+      
       break
     }
 
     case '/invite':{
-      
       console.log('inviting...')
+      
+      if(words.length > 2){
+        Notify.create({
+          message: `Please use correct command syntax - /invite <username>`,
+        })
+        break
+      }
+
+      const channel = SELECTEDCHANNEL.value
+
+      if(channel.status === 'private' && channel.role === 'user'){
+        Notify.create({
+          message: `As a regular user, you can not invite anyone to private channels.`
+        })
+        break
+      }
+
+      if(!channel || !channel.id){
+        Notify.create({
+          message: `Please enter a channel to invite someone.`
+        })
+        break
+      }
+      
       const userToInvite = words[1]
       
+      // routes.ts => /channels/invite => ChannelController.invite()
       await api.post('/channels/invite', {
         inviterNickname: NICKNAME.value,
         userNickname: userToInvite,
         channelName: SELECTEDCHANNEL.value.name
       })
+
+      Notify.create({
+        message: `Invited user ${userToInvite}`
+      })
+      break
+    }
+
+    case '/revoke':{
+      console.log('revoking...')
+      let userToRevoke = words[1]
+
+      const channel = SELECTEDCHANNEL.value
+      if(channel.role === 'user'){
+        Notify.create({
+          message: `You cannot revoke membership of anyone as a user`
+        })
+        break
+      }
+
+      if(channel.status === 'public'){
+        Notify.create({
+          message: `You can only revoke user membership from a private channel`   // defined by assignment
+        })
+      }
+
+      await api.post('/channels/revoke', {
+        adminNickname: NICKNAME.value,
+        userNickname: userToRevoke,
+        channelId: channel.id
+      })
+
       break
     }
 

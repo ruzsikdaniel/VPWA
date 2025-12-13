@@ -1,8 +1,10 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { io } from 'socket.io-client'
 import { MESSAGES, CHANNELS, NICKNAME, SELECTEDCHANNEL } from './globalStates'
+import { api } from 'src/boot/axios'
 
 export const socket = ref(null)
+
 
 export function initWebSocket() {
   if(socket.value)
@@ -15,17 +17,24 @@ export function initWebSocket() {
 
   socket.value.on('connect', () => {
     console.log('[WS] Connected:', socket.value.id)
+    
+    joinAllChannels()
 
-    // Join the channel (room)
-    //*
     if(SELECTEDCHANNEL.value?.id){
-      joinChannel(SELECTEDCHANNEL.value.id)
+      joinWSChannel(SELECTEDCHANNEL.value.id)
     }
+  })
+
+  watch(CHANNELS, () => {
+    if(!socket.value)
+      return
+    joinAllChannels()
   })
 
   // Global event listener - type-data
   socket.value.on('event', (packet) => {
     const {type, data} = packet
+    console.log('event caught: ', type)
     handleEvent(type, data)
   })
 
@@ -34,6 +43,8 @@ export function initWebSocket() {
     //* socket.value.disconnect()   // disconnect from socket instead of destroying
   })
 }
+
+
 
 function handleEvent(type, data){
   switch(type){
@@ -65,7 +76,18 @@ function handleEvent(type, data){
   }
 }
 
-export function joinChannel(channelId){
+export function joinAllChannels(){
+  const channels = CHANNELS.value
+  console.log("[WS] Joining all channels: ", channels)
+
+  channels.forEach(ch => {
+    if(ch?.id){
+      joinWSChannel(ch.id)
+    }
+  })
+}
+
+export function joinWSChannel(channelId){
   if(!socket.value)
     return
 
@@ -76,7 +98,6 @@ export function joinChannel(channelId){
 
   console.log('[WS] joined channel: ', channelId)
 }
-
 
 export function sendWSMessage(msgText) {
 console.log('currently sending message: ', msgText)
@@ -130,6 +151,10 @@ function handleChannelUpdate(data){
   switch(action){
     case 'joined':
       console.log('[WS] User joined channel: ', nickname)
+      api.get(`/channels/get_channels/${NICKNAME.value}`)
+        .then(response => {
+          CHANNELS.value = response.data
+        })
       break
 
     case 'left':
@@ -139,15 +164,26 @@ function handleChannelUpdate(data){
     case 'deleted':
       // remove channelId from local channel storage 
       CHANNELS.value = CHANNELS.value.filter(ch => ch.id !== channelId)
+      
+      if(SELECTEDCHANNEL.value?.id === channelId){
+        SELECTEDCHANNEL.value = null
+        MESSAGES.value = []
+      }
       break
 
     case 'invited':
       // fetch channel list and push new channel
       console.log('[WS] Channel update: invite')
+      api.get(`/channels/get_channels/${NICKNAME.value}`)
+        .then(response => {
+          CHANNELS.value = response.data
+        })
       break
 
     case 'kicked':
+    case 'revoked':
       // TODO refine kicking logic
+      CHANNELS.value = CHANNELS.value.filter(ch => ch.id !== channelId)
       
       // empty selected channel and messages
       if(SELECTEDCHANNEL.value?.id === channelId){
@@ -156,11 +192,8 @@ function handleChannelUpdate(data){
       }
 
       // remove channel from channel list 
-      CHANNELS.value = CHANNELS.value.filter(ch => ch.id !== channelId)
       break
-    }
-
-
-
-    console.log('[WS] Channel update applied: ', action)
+  }
+  
+  console.log('[WS] Channel update applied: ', action)
 }

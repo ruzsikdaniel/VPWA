@@ -10,8 +10,6 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
-import Channel from '#models/channel'
-import ChannelUser from '#models/channel_user'
 import Message from '#models/message'
 import User from '#models/user'
 
@@ -37,9 +35,10 @@ router
     router.get('get_users/:channelId', [ChannelsController, 'listUsers'])     // GET '/channels/get_users/:channelId' -> get the list of users in the channel
     router.get('/status/:channelId', [ChannelsController, 'status'])          // GET '/channels/status/:channelId'-> get channel status by channel id
 
-    router.post('/', [ChannelsController, 'create'])        // POST '/channels' -> create a new channel    
-    router.post('/join', [ChannelsController, 'join'])      // POST '/channels/join -> ChannelsController.join()
-    router.post('/invite', [ChannelsController, 'invite'])  // POST '/channels/invite' -> Invite user to the channel
+    router.post('/', [ChannelsController, 'create'])        // POST '/channels' -> ChannelsController.create() - create a new channel    
+    router.post('/join', [ChannelsController, 'join'])      // POST '/channels/join -> ChannelsController.join() - join or create new channel to join
+    router.post('/invite', [ChannelsController, 'invite'])  // POST '/channels/invite' -> ChannelsController.invite() - invite user to the channel
+    router.post('/revoke', [ChannelsController, 'revoke'])  // POST '/channels/revoke' -> ChannelsController.revoke() - revoke membership of user in private channel (as admin)
 
     router.delete('/', [ChannelsController, 'leave'])   // DELETE '/channels' -> Leave channel
   })
@@ -98,54 +97,3 @@ router
     })
   })
   .prefix('/messages')
-
-/* Web Socket */
-const channelClients: Record<string, Set<any>> = {} // all web socket connections to that channel
-/*
-router.ws('/channels/:channelId', ({ ws, params }) => {
-  const channelId = params.channelId
-
-  // Initialize the set for this channel
-  if (!channelClients[channelId]) {
-    channelClients[channelId] = new Set()
-  }
-  channelClients[channelId].add(ws)
-
-  // Log client connection
-  console.log(
-    `[WS] Client connected to channel ${channelId}. Total clients: ${channelClients[channelId].size}`
-  )
-
-  // Send welcome to the new client
-  //ws.send(JSON.stringify({ system: true, message: `Connected to channel ${channelId}` }))
-
-  // Handle incoming messages
-  ws.on('message', (msg: string) => {
-    const payload = JSON.parse(msg)
-
-    // Broadcast to all clients in this channel
-    for (const client of channelClients[channelId]) {
-      if (client !== ws) {
-        // skip sender
-        client.send(
-          JSON.stringify({
-            channelId,
-            nickname: payload.nickname,
-            msgText: payload.msgText,
-            timestamp: new Date().toISOString(),
-          })
-        )
-        console.log(`brodcasting message ${JSON.stringify(payload)}`)
-      }
-    }
-  })
-
-  // Handle client disconnect
-  ws.on('close', () => {
-    channelClients[channelId].delete(ws)
-    console.log(
-      `[WS] Client disconnected from channel ${channelId}. Remaining clients: ${channelClients[channelId].size}`
-    )
-  })
-})
-*/

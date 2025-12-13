@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
-import { initWebSocket } from 'src/stores/ws'
 import { api } from 'boot/axios'
+import { selectChannel } from './channelStore'
 
 // Persist values on page refresh so it doesnt log u out
 function usePersistentRef(key, defaultValue = '') {
@@ -30,7 +30,7 @@ export const PASSWORD = ref('')
 export const CONFIRMPASSWORD = ref('')
 export const TOKEN = usePersistentRef('TOKEN')
 
-export const SELECTEDCHANNEL = usePersistentRef('SELECTEDCHANNEL', null)
+export const SELECTEDCHANNEL = ref(null)
 
 // Messages from currently selected channel
 export const MESSAGES = ref([])
@@ -47,6 +47,18 @@ export const AVAILABLECOLORS = [
   '#FACC15',
   '#6B7280',
 ]
+
+watch(CHANNELS, (newList) => {
+  const channel = SELECTEDCHANNEL.value
+  if(!channel)
+    return
+
+  const channels_exist = newList.some(ch => ch.id === channel.id)
+  if(!channels_exist){
+    SELECTEDCHANNEL.value = null
+    MESSAGES.value = []
+  }
+})
 
 // Functions
 export function getInitials(channelName) {
@@ -89,32 +101,7 @@ export function selectRandomColor() {
   return AVAILABLECOLORS[Math.floor(Math.random() * AVAILABLECOLORS.length)]
 }
 
-export function selectChannel(channelId) {
-  //disconnectWebSocket()
 
-  let found = CHANNELS.value.find((item) => item.id === channelId)
-
-  console.log('channel found: ', found)
-
-  if (!found) {
-    console.warn('no channels: ', channelId)
-    SELECTEDCHANNEL.value = null
-    return
-  }
-
-  SELECTEDCHANNEL.value = {
-    id: found.id,
-    name: found.name,
-    status: found.status,
-    role: found.role,
-    channelColor: found.channelColor
-  }
-
-  MESSAGES.value = []
-
-
-  initWebSocket(found.id)
-}
 
 export async function createChannel(channelName, channelStatus) {
   let color = selectRandomColor()
@@ -140,15 +127,15 @@ export async function createChannel(channelName, channelStatus) {
     else {
       console.log('Channel created:', response.data)
 
+      const newChannel = response.data
+
       // Add new channel to the list immediately
-      CHANNELS.value.push(response.data)
+      CHANNELS.value.push(newChannel)
 
       // Auto-select it
-      selectChannel(response.data.id)
+      selectChannel(newChannel.id)
     }
   } catch (err) {
     console.error('Error creating channel:', err)
   }
-
-
 }

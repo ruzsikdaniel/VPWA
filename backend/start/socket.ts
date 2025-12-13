@@ -94,7 +94,6 @@ async function handleSendMessage(socket: Socket, data: any){
 
 async function handleTyping(socket: Socket, data: any){
     const {channelId, nickname, text} = data
-    //! text -> draft
 
     if(!channelId)
         return

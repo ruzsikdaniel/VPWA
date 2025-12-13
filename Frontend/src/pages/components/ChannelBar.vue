@@ -65,54 +65,45 @@
 </template>
 
 <script setup>
-import { api } from 'boot/axios'
 import {
   NICKNAME,
   SELECTEDCHANNEL,
   getInitials,
   CHANNELS,
-  selectChannel,
   createChannel,
   MESSAGES
 } from 'src/stores/globalStates'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { checkContrastColor } from 'src/stores/globalStates'
-
-onMounted(async () => {
-  await loadChannels()
-})
-
-async function loadChannels() {
-  try {
-    const response = await api.get(`channels/get_channels/${NICKNAME.value}`)
-    CHANNELS.value = response.data || []
-
-    console.log("CHANNELS loaded:", CHANNELS.value)
-
-    if (CHANNELS.value.length === 0){
-      console.warn('No channels found for user')
-      SELECTEDCHANNEL.value = null
-      MESSAGES.value = []
-      return
-    }
-
-    const firstChannel = CHANNELS.value[0]
-    
-    if (!firstChannel || !firstChannel.id) {
-      console.warn('Invalid first channel: ', firstChannel)
-    }
-    selectChannel(firstChannel.id)
-
-    console.log(CHANNELS.value)
-    console.log(firstChannel)
-  } catch (err) {
-    console.error('Error loading channels:', err)
-  }
-}
+import { refreshChannels, selectChannel } from 'src/stores/channelStore'
 
 const showPopup = ref(false)
 const name = ref('')
 const status = ref('public')
+
+onMounted(async () => {
+  await refreshChannels()
+
+  // channels successfully loaded
+  if(CHANNELS.value.length > 0)
+    selectChannel(CHANNELS.value[0].id)   // select the first one
+})
+
+watch(CHANNELS, (newList) => {
+  // no channels → reset UI
+  const channel = SELECTEDCHANNEL.value
+
+  if(!newList || newList.length === 0){
+    SELECTEDCHANNEL.value = null
+    MESSAGES.value = []
+    return
+  }
+
+  // selected channel removed → choose fallback
+  if(channel && !newList.find((ch) => ch.id === channel.id)){
+    selectChannel(newList[0].id)
+  }
+})
 
 async function handleChannelCreation() {
   if (!name.value.trim()) {

@@ -20,6 +20,8 @@ import ChannelBar from './components/ChannelBar.vue'
 import NavBar from './components/NavBar.vue'
 import ChannelContent from './components/ChannelContent.vue'
 import { ISLOGGEDIN } from 'src/stores/globalStates'
+import { onMounted } from 'vue'
+import { initWebSocket } from 'src/stores/ws'
 
 const router = useRouter()
 
@@ -27,6 +29,10 @@ const router = useRouter()
 if (ISLOGGEDIN.value === false) {
   router.push('/signin')
 }
+
+onMounted(() => {
+  initWebSocket()   // connect to websocket immediately after fully loading the page
+})
 </script>
 
 <style lang="scss" scoped>

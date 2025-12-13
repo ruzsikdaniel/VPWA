@@ -27,7 +27,12 @@ export default class ChannelsController {
     const nickname = params.nickname
     const user = await User.findByOrFail('nickname', nickname)
 
-    const userChannels = await ChannelUser.query().where('user_id', user.id).preload('channel')
+    if(!user)
+      return {status: 400, message: 'User does not exist'}
+
+    const userChannels = await ChannelUser.query()
+      .where('user_id', user.id)
+      .preload('channel')
 
     return userChannels.map((c) => ({
       id: c.channel.id,
@@ -41,10 +46,10 @@ export default class ChannelsController {
   public async listUsers({ params }: HttpContext) {
     const channelId = params.channelId
 
-    const users = await User.query()
-      .join('channel_users', 'users.id', 'channel_users.user_id')
-      .where('channel_users.channel_id', channelId)
-      .select('users.*', 'channel_users.role')
+    const users = await User.query()                                // find all users
+      .join('channel_users', 'users.id', 'channel_users.user_id')   // that are channel users
+      .where('channel_users.channel_id', channelId)                 // of this specific channel
+      .select('users.*', 'channel_users.role')                      // and save their roles also
 
     return users.map((u) => ({
       nickname: u.nickname,
@@ -53,21 +58,17 @@ export default class ChannelsController {
   }
 
   public async create({ request }: HttpContext) {
-    const { name, channelColor, status, creatorNickname } = request.only([
-      'name',
-      'channelColor',
-      'status',
-      'creatorNickname',
+    const { name, channelColor, status, creatorNickname } = request.only(['name', 'channelColor', 'status', 'creatorNickname',
     ])
 
     try {
-      const channel = await Channel.create({name, channelColor, status})
-      const user = await User.findByOrFail('nickname', creatorNickname)
+      const channel = await Channel.create({name, channelColor, status})    // create a new channel with specific color and status
+      const user = await User.findByOrFail('nickname', creatorNickname)     // find user that is the creator of this channel
 
-      await ChannelUser.create({
-        userId: user.id,
-        channelId: channel.id,
-        role: 'admin',
+      await ChannelUser.create({  // create a new channel user
+        userId: user.id,          // with the id of the creator
+        channelId: channel.id,    // with the id of the channel
+        role: 'admin',            // and the 'admin' role
       })
 
       return channel
@@ -86,14 +87,19 @@ export default class ChannelsController {
     let channel = await Channel.findBy('name', name)    // pull current channel from DB (if exists)
     let role = 'user'   // default role
 
-
     // channel does not exist - create channel
     if(!channel){
-      channel = await Channel.create({name, status, channelColor: selectRandomColor()}) // add new channel to DB (otherwise)
-      role = 'admin'    // set user's role to admin
+      // add new channel to DB (otherwise)
+      channel = await Channel.create({    
+        name, 
+        status, 
+        channelColor: selectRandomColor()
+      }) 
+      role = 'admin'    // user created this channel -> set user's role to admin
     }
 
-    const user = await User.findByOrFail('nickname', nickname)  // pull joining user from DB
+    // pull joining user from DB
+    const user = await User.findByOrFail('nickname', nickname)  
 
     // add user to channel_users table
     await ChannelUser.firstOrCreate(
@@ -101,7 +107,7 @@ export default class ChannelsController {
         {role}
     )
 
-    // WS broadcast: user joined
+    // WebSocket broadcast: event -> 'channelUpdate - joined'
     const io = getIO()
     io!.to(String(channel.id)).emit('event', {
       type: 'channelUpdate',
@@ -116,10 +122,7 @@ export default class ChannelsController {
   }
 
   public async invite({ request }: HttpContext){
-    const {inviterNickname, userNickname, channelName} = request.only([
-      'inviterNickname',
-      'userNickname',
-      'channelName',
+    const {inviterNickname, userNickname, channelName} = request.only(['inviterNickname', 'userNickname', 'channelName',
     ])
 
     const channel = await Channel.findByOrFail('name', channelName)
@@ -150,6 +153,43 @@ export default class ChannelsController {
 
     return {status: 201, message: 'User invited successfully'}
   }
+
+public async revoke({request}: HttpContext){
+  const {adminNickname, userNickname, channelId} = request.only(['adminNickname', 'userNickname', 'channelId'])
+  
+  const channel = await Channel.findOrFail(channelId)
+  const admin = await User.findByOrFail('nickname', adminNickname)
+  const user = await User.findByOrFail('nickname', userNickname)
+
+  const adminMember = await ChannelUser
+    .query()
+    .where('user_id', admin.id)           //
+    .andWhere('channel_id', channelId)    //
+    .firstOrFail()                        //
+
+  if(adminMember.role !== 'admin'){
+    return {status: 403, message: 'Only admin can revoke users'}
+  }
+
+  // delete the user
+  await ChannelUser
+    .query()
+    .where('user_id', user.id)
+    .andWhere('channel_id', channelId)
+    .delete()
+
+  const io = getIO()
+  io!.to(String(channelId)).emit('event', {
+    type: 'channelUpdate',
+    data: {
+      action: 'revoked',
+      nickname: userNickname,
+      channelId
+    }
+  })
+
+  return {status: 200, message: 'User revoked successfully'}
+}
 
   public async leave({ request }: HttpContext) {
     const { channelId, nickname } = request.only(['channelId', 'nickname'])
