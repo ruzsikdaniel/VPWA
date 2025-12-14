@@ -40,7 +40,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
 import { sendWSMessage, sendTyping, joinWSChannel } from 'src/stores/ws'
-import { refreshChannels, selectChannel } from 'src/stores/channelStore'
+import { refreshChannels, selectChannel, CHANNEL_EVENT } from 'src/stores/channelStore'
 import { NICKNAME, SELECTEDCHANNEL } from 'src/stores/globalStates'
 
 const message = ref('')
@@ -192,6 +192,7 @@ async function handleCommand(input) {
   switch(keyword){
     case '/join':{
       console.log('joining...')
+      
       const channelName = words[1]
       let channelType = ''
 
@@ -218,6 +219,13 @@ async function handleCommand(input) {
         nickname: NICKNAME.value
       })     
 
+      if(response.data.code === 'USER_BANNED'){
+        // this is used to prompt the USER_BANNED channel event
+        console.warn('yoink', response.data)
+        CHANNEL_EVENT.value = {code: response.data.code, data: {}}
+        console.warn('channel event new', CHANNEL_EVENT.value)
+      }
+
       // trying to join a private channel
       if(response.data.status === 403){
         Notify.create({
@@ -239,7 +247,7 @@ async function handleCommand(input) {
       
 
       Notify.create({
-        message: 'Failed to join channel'
+        message: `Successfully joined channel ${channel.name}`
       })
       break
     }
@@ -273,15 +281,16 @@ async function handleCommand(input) {
       const userToInvite = words[1]
       
       // routes.ts => /channels/invite => ChannelController.invite()
-      await api.post('/channels/invite', {
-        inviterNickname: NICKNAME.value,
-        targetNickname: userToInvite,
-        channelName: SELECTEDCHANNEL.value.name
-      })
-
-      Notify.create({
-        message: `Invited user ${userToInvite}`
-      })
+      try{
+        await api.post('/channels/invite', {
+          inviterNickname: NICKNAME.value,
+          targetNickname: userToInvite,
+          channelName: SELECTEDCHANNEL.value.name
+        })
+      }
+      catch(err){
+        console.warn('invite error', err)
+      }
       break
     }
 

@@ -5,6 +5,7 @@ import { getIO } from "#start/socket"
 import { HttpContext } from '@adonisjs/core/http'
 import { CHANNEL_ROLE } from "./channels_controller.js"
 import Channel from "#models/channel"
+import ChannelBan from "#models/channel_ban"
 
 export class KickController{
     public async kick({request}: HttpContext){
@@ -57,20 +58,18 @@ export class KickController{
             io.to(`user:${targetNickname}`).emit('event', {
                 type: 'channelUpdate',
                 data: {
-                    action: 'kicked',
+                    code: 'KICKED_FROM_CHANNEL_ADMIN',
                     channelId, 
-                    channelName: channel.name,
-                    nickname: targetNickname
+                    channelName: channel.name
                 }
             })
 
-            // notify channel users
-            io.to(`channel:${channelId}`).emit('event', {
+            io.to(`user:${voterNickname}`).emit('event', {
                 type: 'channelUpdate',
                 data: {
-                    action: 'kicked',
+                    code: 'KICK_SUCCESS',
                     channelId,
-                    nickname: targetNickname
+                    targetNickname
                 }
             })
 
@@ -85,7 +84,7 @@ export class KickController{
             .first()
 
         if(vote)
-            return {status: 403, message: 'You already voted to kick this user'}
+            return {code: 'REDUNDANT_KICK'}
         
         await KickVote.create({
             channelId,
@@ -100,20 +99,23 @@ export class KickController{
 
         const votes = Number(voteCount[0].$extras.total)
 
-        /*
-        io.to(`channel:${channelId}`).emit('event', {
+        io!.to(`channel:${channelId}`).emit('event', {
             type: 'channelUpdate',
             data: {
-                action: 'kick_vote',
+                code: 'KICK_VOTE',
                 channelId,
                 targetNickname,
                 votes
             }
         })
-        */
 
         // votes passed -> target user is kicked
         if(votes >= 3){
+            await ChannelBan.firstOrCreate(
+                {channelId, userId: target.id,},
+                {bannedByAdmin: false}
+            )
+            
             await targetMember.delete()
 
             await KickVote.query()
@@ -121,30 +123,27 @@ export class KickController{
                 .andWhere('target_user_id', target.id)
                 .delete()
 
-            // notify user that they have been kicked
-            // TODO - fillb banning logic here
             io.to(`user:${targetNickname}`).emit('event', {
                 type: 'channelUpdate',
                 data: {
-                    action: 'kicked',
+                    code: 'KICKED_FROM_CHANNEL_VOTE',
                     channelId,
-                    channelName: channel.name,
-                    nickname: targetNickname
+                    channelName: channel.name
                 }
             })
 
-            io!.to(`channel:${channelId}`).emit('event', {
+            io!.to(`user:${voterNickname}`).emit('event', {
                 type: 'channelUpdate',
                 data: {
-                    action: 'kicked',
+                    code: 'KICK_SUCCESS',
                     channelId,
-                    nickname: targetNickname
+                    targetNickname
                 }
             })
 
             return {status: 200, message: 'User kicked (3 votes reached)'}
         }
 
-        return {status: 200, message: `Kick vote registered (${votes}/3)`}
+        return {status: 200, code: 'KICK_VOTE'}
     }
 }

@@ -134,18 +134,12 @@ async function handleStatusUpdate(socket: Socket, data: any){
 }
 
 async function handleChannelUpdate(socket: Socket, data: any){
-    const {action, channelId, nickname} = data
-
-    io!.to(`channel:${channelId}`).emit('event', {
-        type: 'channelUpdate',
-        data: {
-            action, 
-            channelId, 
-            nickname
-        }
+    io!.to(`channel:${data.channelId}`).emit('event', {
+        type: 'channelUpdate', 
+        data
     })
 
-    console.log('[IOnew] Channel update: ', action, channelId, nickname)
+    console.log('[IOnew] Channel update: ', data)
 }
 
 export function getIO(): Server {

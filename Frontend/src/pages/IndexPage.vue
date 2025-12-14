@@ -24,13 +24,28 @@ import { initWebSocket } from 'src/stores/ws'
 import { CHANNEL_EVENT } from 'src/stores/channelStore'
 import { Notify } from 'quasar'
 import { ISLOGGEDIN } from 'src/stores/globalStates'
+import { NOTIFY_MESSAGES } from 'src/utils/notifyMessages'
 
 const router = useRouter()
 
 watch(CHANNEL_EVENT, (event) => {
-  if(!event)
+  console.warn('event caught', event)
+  if(!event || !event.code){
+    console.warn('invalid channel event', event)
+    return
+  }
+
+  const handler = NOTIFY_MESSAGES[event.code]
+  if(!handler)
     return
 
+  const message = typeof handler === 'function' ? handler(event.data || []) : handler
+  if(!message)
+    return
+
+  Notify.create({message})
+
+/*
   switch(event.type){
     case 'invited':
       Notify.create({
@@ -44,11 +59,18 @@ watch(CHANNEL_EVENT, (event) => {
       })
       break
     }
-
+/*
     case 'kicked':
     case 'revoked':{
       Notify.create({
         message: `You have been removed from channel ${event.channelName}`
+      })
+      break
+    }
+
+    case 'kick_vote':{
+      Notify.create({
+        message: `Kick vote registered for user ${event.nickname} (${event.votes}/3)`
       })
       break
     }
@@ -64,7 +86,7 @@ watch(CHANNEL_EVENT, (event) => {
     case 'deleted':
       break
   }
-
+*/
   CHANNEL_EVENT.value = null
 })
 
