@@ -34,6 +34,7 @@ router
     router.get('get_channels/:nickname', [ChannelsController, 'listForUser']) // GET '/channels/get_channels/:nickname' -> get user's channel list
     router.get('get_users/:channelId', [ChannelsController, 'listUsers'])     // GET '/channels/get_users/:channelId' -> get the list of users in the channel
     router.get('/status/:channelId', [ChannelsController, 'status'])          // GET '/channels/status/:channelId'-> get channel status by channel id
+    router.get('/:channelId/messages', [MessageController, 'getMessages'])
 
     router.post('/', [ChannelsController, 'create'])        // POST '/channels' -> ChannelsController.create() - create a new channel    
     

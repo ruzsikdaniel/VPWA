@@ -2,6 +2,7 @@ import { ref, watch } from 'vue'
 import { io } from 'socket.io-client'
 import { MESSAGES, CHANNELS, NICKNAME, SELECTEDCHANNEL } from './globalStates'
 import { CHANNEL_EVENT, refreshChannels } from './channelStore'
+import { updateTyping } from './typingStore'
 
 export const socket = ref(null)
 
@@ -55,6 +56,8 @@ async function handleEvent(type, data){
     case 'typing':
       //console.log('[WS] typing: ', data)
       // TODO typingStore.update ...
+
+      updateTyping(data)
       break
 
     case 'statusUpdate':

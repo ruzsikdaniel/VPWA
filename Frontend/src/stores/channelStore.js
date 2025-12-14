@@ -1,16 +1,16 @@
 import { api } from "src/boot/axios";
-import { CHANNELS, SELECTEDCHANNEL, MESSAGES, NICKNAME} from "./globalStates";
+import { CHANNELS, SELECTEDCHANNEL, MESSAGES, NICKNAME, LOADING_MESSAGES, MORE_MESSAGES} from "./globalStates";
 import { joinWSChannel } from "./ws";
 import { ref } from "vue";
 
 export const CHANNEL_EVENT = ref(null)
 
-export function selectChannel(channelId){
+export async function selectChannel(channelId){
     const channel = CHANNELS.value.find((item) => item.id === channelId)
     console.log('channel found: ', channel)
-    if (!channel) {
+
+    if(!channel)
         return
-    }
 
     SELECTEDCHANNEL.value = {
         id: channel.id,
@@ -21,8 +21,37 @@ export function selectChannel(channelId){
     }
 
     MESSAGES.value = []
+    MORE_MESSAGES.value = true
+    LOADING_MESSAGES.value = false
+
+    await loadOlderMessages()
     joinWSChannel(channelId)
 }
+
+export async function loadOlderMessages(){
+  console.log('[loadOlderMessages]', {
+    channel: SELECTEDCHANNEL.value,
+  })
+
+  if(LOADING_MESSAGES.value || !MORE_MESSAGES.value)
+    return
+
+  LOADING_MESSAGES.value = true
+
+  const oldest = MESSAGES.value[0]
+  const cursor = oldest?.id
+
+  const response = await api.get(`/channels/${SELECTEDCHANNEL.value.id}/messages`, {params: {cursor, limit: 30}})
+  console.log('response', response.data)
+  if(response.data.length === 0)
+    MORE_MESSAGES.value = false
+  else
+    MESSAGES.value.unshift(...response.data)
+
+  LOADING_MESSAGES.value = false
+}
+
+
 
 export async function refreshChannels(){
   try{

@@ -34,6 +34,8 @@ export const SELECTEDCHANNEL = ref(null)
 
 // Messages from currently selected channel
 export const MESSAGES = ref([])
+export const MORE_MESSAGES = ref(true)
+export const LOADING_MESSAGES = ref(false)
 
 export const CHANNELS = ref([])
 

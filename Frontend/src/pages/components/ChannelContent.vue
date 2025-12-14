@@ -8,9 +8,13 @@
         <div v-if="$q.screen.gt.xs">
           {{ SELECTEDCHANNEL.name }}
         </div>
+        
       </div>
 
-      <div class="typing">User is typing ...</div>
+      <div class="typing-container">
+        <TypingField />
+      </div>
+
 
       <div class="leave-channel">
         <button @click="leave()">
@@ -46,9 +50,9 @@
       </q-infinite-scroll>
       -->
 
-      <div class="messages-container">
+      <div class="messages-container" ref="messagesContainer" @scroll="onScroll">
         <MessageContainer 
-          v-for="message in safeMessages" 
+          v-for="message in MESSAGES" 
           :key="message.id"
           :message="message" />
       </div>
@@ -61,7 +65,8 @@
 <script setup>
 import MessageContainer from './MessageContainer.vue'
 import InputContainer from './InputContainer.vue'
-import { watch, computed } from 'vue'
+import TypingField from './TypingField.vue'
+import { watch, nextTick, ref } from 'vue'
 import { api } from 'boot/axios'
 import {
   CHANNELS,
@@ -71,23 +76,47 @@ import {
   getInitials
 } from 'src/stores/globalStates'
 import { checkContrastColor } from 'src/stores/globalStates'
+import { loadOlderMessages } from 'src/stores/channelStore'
 
-const safeMessages = computed(() => 
-  MESSAGES.value.filter(m =>
-    m &&
-    typeof m === 'object' &&
-    m.id && 
-    m.nickname &&
-    m.profileColor &&
-    m.msgText
-  )
-)
+const messagesContainer = ref(null)
 
-watch(SELECTEDCHANNEL, async (value) => {
-  if (!value || !value.id)
-    return 
-  await loadMessages()
-}, {immediate: false})
+async function onScroll(){
+  const el = messagesContainer.value
+  if(!el)
+    return
+
+  if(el.scrollTop <= 50){
+    const prevHeight = el.scrollHeight
+
+    await loadOlderMessages()
+    await nextTick()
+
+    const newHeight = el.scrollHeight
+    el.scrollTop = newHeight - prevHeight
+  }
+}
+
+watch(() => MESSAGES.value.length, async (len, prevLen) => {
+  const el = messagesContainer.value
+  if (!el) return
+
+  // First load → always scroll to bottom
+  if (prevLen === 0 && len > 0) {
+    await nextTick()
+    el.scrollTop = el.scrollHeight
+    return
+  }
+
+  // New message → scroll only if user is near bottom
+  const isNearBottom =
+    el.scrollHeight - el.scrollTop - el.clientHeight < 100
+
+  if (isNearBottom) {
+    await nextTick()
+    el.scrollTop = el.scrollHeight
+  }
+})
+
 
 async function leave() {
   let channelId = SELECTEDCHANNEL.value.id
@@ -114,24 +143,6 @@ async function leave() {
     }
   } catch (err) {
     console.error('Error leaving channel:', err)
-  }
-}
-
-async function loadMessages() {
-  const channelId = SELECTEDCHANNEL.value?.id
-  console.log('channelid: ', channelId)
-  if(!channelId || isNaN(channelId))
-    return
-  
-  try {
-    const response = await api.get(`messages/${channelId}`)
-    // setMessages()
-    MESSAGES.value = response.data
-
-    console.log('response data', response.data)
-    console.log('messages', MESSAGES.value)
-  } catch (err) {
-    console.error('Error loading messages:', err)
   }
 }
 </script>
@@ -167,6 +178,11 @@ async function loadMessages() {
   border-bottom: 1px #777 solid;
 
   padding: 1rem;
+
+  position: relative;
+  overflow: visible;
+
+  pointer-events: auto;
 }
 
 /* Selected chanel container */
@@ -210,6 +226,11 @@ async function loadMessages() {
   }
 }
 
+.typing-container{
+  pointer-events: auto;
+  position: relative;
+}
+
 .typing {
   display: flex;
   align-items: center;
@@ -242,14 +263,14 @@ async function loadMessages() {
 .messages-outer {
   flex: 1;
   display: flex;
-  flex-direction: column-reverse;
-  overflow-y: auto;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .messages-container {
-  display: flex;
-  flex-direction: column;
-
-  padding-bottom: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 8px;
 }
 </style>
