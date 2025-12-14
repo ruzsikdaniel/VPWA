@@ -108,20 +108,12 @@ async function logOut() {
   PASSWORD.value = ''
   CONFIRMPASSWORD.value = ''
 
-  console.log(2)
-
   // Remove only the keys you persist
-  localStorage.clear()
-
-  console.log(3)
+  sessionStorage.clear()
 
   await nextTick()
 
-  console.log(4)
-
   router.replace('/signin')
-
-  console.log(5)
 }
 </script>
 

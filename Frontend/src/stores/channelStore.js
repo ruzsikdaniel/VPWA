@@ -12,6 +12,9 @@ export async function selectChannel(channelId){
     if(!channel)
         return
 
+    if(channel.isInvited)
+      channel.isInvited = false
+
     SELECTEDCHANNEL.value = {
         id: channel.id,
         name: channel.name,
@@ -29,10 +32,6 @@ export async function selectChannel(channelId){
 }
 
 export async function loadOlderMessages(){
-  console.log('[loadOlderMessages]', {
-    channel: SELECTEDCHANNEL.value,
-  })
-
   if(LOADING_MESSAGES.value || !MORE_MESSAGES.value)
     return
 

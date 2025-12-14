@@ -4,17 +4,17 @@ import { selectChannel } from './channelStore'
 
 // Persist values on page refresh so it doesnt log u out
 function usePersistentRef(key, defaultValue = '') {
-  const data = ref(localStorage.getItem(key) || defaultValue)
+  const data = ref(sessionStorage.getItem(key) || defaultValue)
   watch(data, (val) => {
-    localStorage.setItem(key, val)
+    sessionStorage.setItem(key, val)
   })
   return data
 }
 
 function usePersistentRefBoolean(key, defaultValue = false) {
-  const stored = localStorage.getItem(key)
+  const stored = sessionStorage.getItem(key)
   const data = ref(stored === 'true' ? true : stored === 'false' ? false : defaultValue)
-  watch(data, (val) => localStorage.setItem(key, val))
+  watch(data, (val) => sessionStorage.setItem(key, val))
   return data
 }
 

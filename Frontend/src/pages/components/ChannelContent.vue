@@ -32,29 +32,14 @@
     </div>
 
     <div class="messages-outer">
-      <!--
-      <q-infinite-scroll reverse @load="loadMoreMessages" :offset="250" :disable="!hasMoreMessages">
-        <template v-slot:loading>
-          <div class="row justify-center q-my-md">
-            <q-spinner-dots color="primary" size="40px" />
-          </div>
-        </template>
-
-        <div class="messages-container">
+      <div class="messages-container" ref="messagesContainer" @scroll="onScroll">
+        <div class="messages-inner">
           <MessageContainer
-            v-for="message in selectedChannel.messages"
+            v-for="message in MESSAGES"
             :key="message.id"
             :message="message"
           />
         </div>
-      </q-infinite-scroll>
-      -->
-
-      <div class="messages-container" ref="messagesContainer" @scroll="onScroll">
-        <MessageContainer 
-          v-for="message in MESSAGES" 
-          :key="message.id"
-          :message="message" />
       </div>
     </div>
 
@@ -216,15 +201,6 @@ async function leave() {
   font-size: 16px;
 }
 
-@media (max-width: 601px) {
-  .selected-channel, .leave-channel{
-    flex: 0 0 30px;
-  }
-
-  .leave-channel button{
-    padding: 0 0 0.8rem;
-  }
-}
 
 .typing-container{
   pointer-events: auto;
@@ -273,4 +249,23 @@ async function leave() {
   min-height: 0;
   padding: 8px;
 }
+
+.messages-inner{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+}
+
+
+@media (max-width: 601px) {
+  .selected-channel, .leave-channel{
+    flex: 0 0 30px;
+  }
+
+  .leave-channel button{
+    padding: 0 0.8rem;
+  }
+}
+
 </style>

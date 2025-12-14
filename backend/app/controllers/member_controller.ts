@@ -60,8 +60,6 @@ export class MemberController{
             }
         })
 
-
-        // !!
         return {status: 200, code: 'JOINED_CHANNEL', channel}
     } 
 

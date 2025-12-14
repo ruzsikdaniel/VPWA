@@ -162,6 +162,20 @@ async function handleChannelUpdate(data){
 
   if(codes.includes(code)){
     await refreshChannels()
+    if(code === 'INVITED_TO_CHANNEL' && data.channelId){
+      const channels = CHANNELS.value
+      const index = channels.findIndex(ch => ch.id === data.channelId)
+
+      if(index !== -1){
+        const invited = {...channels[index], isInvited: true}
+
+        channels.splice(index, 1)
+        channels.unshift(invited)
+      }
+      
+      CHANNELS.value = channels
+      return
+    }
   }
 
   if(['REVOKED', 'KICKED_FROM_CHANNEL_ADMIN', 'KICKED_FROM_CHANNEL_VOTE', 'CHANNEL_DELETED'].includes(code)

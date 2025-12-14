@@ -4,12 +4,6 @@
 
     <aside class="inner-bar">
       <div class="channel-lists">
-        <ul class="channel-invite">
-          <li>
-            <div v-bind:style="{ backgroundColor: '#555'}">CI</div>
-            <div>Invite to new channel</div>
-          </li>
-        </ul>
 
         <div v-if="CHANNELS.length === 0" class="q-pa-md text-center text-grey">
           <q-icon name="info" size="lg" class="q-mb-sm" />
@@ -23,9 +17,8 @@
             v-for="channel in CHANNELS"
             :key="channel.id"
             @click="selectChannel(channel.id)"
-            :class="{
-              active: SELECTEDCHANNEL && SELECTEDCHANNEL.id && SELECTEDCHANNEL.id === channel.id,
-            }"
+            class="channel"
+            :class="{invited: channel.isInvited, selected: SELECTEDCHANNEL?.id === channel.id}"
           >
             <div v-bind:style="{ backgroundColor: channel.channelColor, color: checkContrastColor(channel.channelColor) }">
               {{ getInitials(channel.name) }}
@@ -224,6 +217,12 @@ async function handleChannelCreation() {
 }
 
 /* --- Sidebar --- */
+
+.invited {
+  border: 2px solid white;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
 .channel-bar {
   width: 300px;
   color: white;
