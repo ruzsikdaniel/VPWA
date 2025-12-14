@@ -34,17 +34,17 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { onMounted, onBeforeUnmount } from 'vue'
 import {
-  ISLOGGEDIN,
-  FIRSTNAME,
-  LASTNAME,
-  NICKNAME,
+  CONFIRMPASSWORD,
   EMAIL,
-  TOKEN,
+  FIRSTNAME,
+  ISLOGGEDIN,
+  LASTNAME,
+  MESSAGES,
+  NICKNAME,
+  PASSWORD,
   PROFILECOLOR,
   SELECTEDCHANNEL,
-  PASSWORD,
-  CONFIRMPASSWORD,
-  MESSAGES,
+  TOKEN,
 } from 'src/stores/globalStates'
 // import { api } from 'boot/axios'
 //import { disconnectWebSocket } from 'src/stores/ws'
@@ -94,22 +94,6 @@ onBeforeUnmount(() => {
 })
 
 async function logOut() {
-  /*  const token = TOKEN.value
-  if (!token) {
-    return
-  }
-
-  try {
-    await api.post(
-      '/auth/logout',
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
-*/
   console.log(1)
 
   ISLOGGEDIN.value = false
@@ -138,10 +122,6 @@ async function logOut() {
   router.replace('/signin')
 
   console.log(5)
-
-  /*  } catch (err) {
-    console.error(err)
-  }*/
 }
 </script>
 

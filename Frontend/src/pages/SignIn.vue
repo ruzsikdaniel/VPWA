@@ -30,18 +30,9 @@
 </template>
 
 <script setup>
-import {
-  ISLOGGEDIN,
-  NICKNAME,
-  PASSWORD,
-  TOKEN,
-  FIRSTNAME,
-  LASTNAME,
-  EMAIL,
-  PROFILECOLOR,
-} from 'src/stores/globalStates'
 import { useRouter } from 'vue-router'
 import { api } from 'boot/axios'
+import { EMAIL, FIRSTNAME, ISLOGGEDIN, LASTNAME, NICKNAME, PASSWORD, PROFILECOLOR, TOKEN } from 'src/stores/globalStates'
 
 const router = useRouter()
 

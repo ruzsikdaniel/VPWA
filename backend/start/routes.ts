@@ -10,13 +10,11 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
-import Message from '#models/message'
-import User from '#models/user'
-
 import AuthController from '#controllers/auth_controller'
 import ChannelsController from '#controllers/channels_controller'
 import { KickController } from '#controllers/kick_controller'
 import { MemberController } from '#controllers/member_controller'
+import MessageController from '#controllers/message_controller'
 
 
 const authController = new AuthController()
@@ -38,67 +36,22 @@ router
     router.get('/status/:channelId', [ChannelsController, 'status'])          // GET '/channels/status/:channelId'-> get channel status by channel id
 
     router.post('/', [ChannelsController, 'create'])        // POST '/channels' -> ChannelsController.create() - create a new channel    
-    router.post('/join', [MemberController, 'join'])      // POST '/channels/join -> ChannelsController.join() - join or create new channel to join
-    router.post('/invite', [MemberController, 'invite'])  // POST '/channels/invite' -> ChannelsController.invite() - invite user to the channel
-    router.post('/revoke', [MemberController, 'revoke'])  // POST '/channels/revoke' -> ChannelsController.revoke() - revoke membership of user in private channel (as admin)
-    router.post('/leave', [MemberController, 'leave'])         // POST '/channels/leave' -> ChannelController.leave() - users leaves the channel, admin deletes channel
-    router.post('/quit', [MemberController, 'quit'])      // POST '/channels/quit' -> ChannalsController.quit() - admin leaves the channel without deletion
-    router.post('/kick', [KickController, 'kick'])
+    
+    router.post('/join', [MemberController, 'join'])      // POST '/channels/join -> MemberController.join() - join or create new channel to join
+    router.post('/invite', [MemberController, 'invite'])  // POST '/channels/invite' -> MemberController.invite() - invite user to the channel
+    router.post('/revoke', [MemberController, 'revoke'])  // POST '/channels/revoke' -> MemberController.revoke() - revoke membership of user in private channel (as admin)
+    router.post('/cancel', [MemberController, 'cancel'])         // POST '/channels/cancel' -> MemberController.cancel() - users leaves the channel, admin deletes channel
+    router.post('/quit', [MemberController, 'quit'])      // POST '/channels/quit' -> MemberController.quit() - admin leaves the channel without deletion
+    
+    router.post('/kick', [KickController, 'kick'])    // POST '/channels/kick' -> KickController.kick() - user gets counted into 3 kicks (ban after 3 kicks), admin kick user immediately
 
-    router.delete('/', [MemberController, 'leave'])   // DELETE '/channels' -> Leave channel
+    router.delete('/', [MemberController, 'cancel'])   // DELETE '/channels' -> Leave channel
   })
   .prefix('/channels')
 
 /* --- /messages --- */
 router
   .group(() => {
-    // GET messages by chanelId
-    router.get('/:channelId', async ({params}) => {
-      const channelId = Number(params.channelId)
-
-      if(!channelId || isNaN(channelId))
-        return []
-
-      const list = await Message
-        .query()
-        .where('channelId', channelId)
-        .preload('user')
-        .orderBy('created_at', 'asc')
-
-      console.warn('messages', list)
-
-      let messages = list.map(msg => ({
-        id: msg.id,
-        channelId: msg.channelId,
-        nickname: msg.user.nickname,
-        msgText: msg.msgText,
-        profileColor: msg.user.profileColor,
-        timestamp: msg.createdAt
-      }))
-      
-      console.log('messages i need', messages)
-      return messages
-    })
-
-    // POST new message
-    router.post('/', async ({ request }) => {
-      const { nickname, channel_id, msg_text} = request.only([
-        'nickname',
-        'channel_id',
-        'msg_text'
-      ])
-
-      // Find user by nickname
-      const user = await User.query().where('nickname', nickname).firstOrFail()
-
-      // Create message
-      const message = await Message.create({
-        userId: user.id,
-        channelId: channel_id,
-        msgText: msg_text
-      })
-
-      return message
-    })
+    router.get('/:channelId', [MessageController, 'listByChannel']) // GET messages by channelId
   })
   .prefix('/messages')

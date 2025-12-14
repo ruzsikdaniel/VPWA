@@ -4,21 +4,7 @@ import Channel from "#models/channel"
 import { getIO } from "#start/socket"
 import { HttpContext } from '@adonisjs/core/http'
 import Message from "#models/message"
-
-export const AVAILABLECOLORS = [
-  '#EF4444',
-  '#3B82F6',
-  '#22C55E',
-  '#EC4899',
-  '#F97316',
-  '#38BDF8',
-  '#FACC15',
-  '#6B7280',
-]
-
-export function selectRandomColor() {
-  return AVAILABLECOLORS[Math.floor(Math.random() * AVAILABLECOLORS.length)]
-}
+import { CHANNEL_ROLE, selectRandomColor } from "./channels_controller.js"
 
 export class MemberController{
     
@@ -26,7 +12,7 @@ export class MemberController{
         const {name, status, nickname} = request.only(['name', 'status', 'nickname'])
 
         let channel = await Channel.findBy('name', name)    // pull current channel from DB (if exists)
-        let role = 'user'   // default role
+        let role = CHANNEL_ROLE.USER   // default role
 
         if(channel && channel.status === 'private'){
         return {status: 403, message: 'Private channel cannot be joined without invitation'}
@@ -40,7 +26,7 @@ export class MemberController{
             status, 
             channelColor: selectRandomColor()
         }) 
-        role = 'admin'    // user created this channel -> set user's role to admin
+        role = CHANNEL_ROLE.ADMIN    // user created this channel -> set user's role to admin
         }
 
         // pull joining user from DB
@@ -76,7 +62,7 @@ export class MemberController{
         // Private channel check
         const inviterMembership = await ChannelUser.query().where('user_id', inviter.id).andWhere('channel_id', channel.id).first()
 
-        if (!inviterMembership || inviterMembership.role !== 'admin'){
+        if (!inviterMembership || inviterMembership.role !== CHANNEL_ROLE.ADMIN){
         return {status: 403, message: 'Only admins can invite to private channels'}
         }
 
@@ -86,13 +72,14 @@ export class MemberController{
         })
 
         // WS broadcast
-        getIO().emit('event', {
-        type: 'channelUpdate',
-        data: {
-            action: 'invited',
-            channelId: channel.id,
-            nickname: user.nickname,
-        },
+        const io = getIO()
+        io!.emit('event', {
+            type: 'channelUpdate',
+            data: {
+                action: 'invited',
+                channelId: channel.id,
+                nickname: user.nickname,
+            },
         })
 
         return {status: 201, message: 'User invited successfully'}
@@ -111,7 +98,7 @@ export class MemberController{
           .andWhere('channel_id', channelId)    //
           .firstOrFail()                        //
     
-        if(adminMember.role !== 'admin'){
+        if(adminMember.role !== CHANNEL_ROLE.ADMIN){
           return {status: 403, message: 'Only admin can revoke users'}
         }
     
@@ -135,7 +122,7 @@ export class MemberController{
         return {status: 200, message: 'User revoked successfully'}
     }
 
-    public async leave({request}: HttpContext){
+    public async cancel({request}: HttpContext){
         const {channelId, nickname} = request.only(['channelId', 'nickname'])
 
         const io = getIO()
@@ -173,7 +160,7 @@ export class MemberController{
         }
 
         // ADMIN DELETES CHANNEL
-        if(member.role === 'admin'){
+        if(member.role === CHANNEL_ROLE.ADMIN){
             await ChannelUser.query()
                 .where('channel_id', channelId)
                 .delete()
@@ -213,7 +200,7 @@ export class MemberController{
         if(!member)
             return { status: 403, message: 'User is not a member of this channel' }
 
-        if(member.role !== 'admin')
+        if(member.role !== CHANNEL_ROLE.ADMIN)
             return {status: 403, message: 'User is not the admin of this channel'}
 
         // DELETE ENTIRE CHANNEL

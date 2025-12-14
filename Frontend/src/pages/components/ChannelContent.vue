@@ -65,12 +65,12 @@ import { watch, computed } from 'vue'
 import { api } from 'boot/axios'
 import {
   CHANNELS,
-  SELECTEDCHANNEL,
   MESSAGES,
-  getInitials,
   NICKNAME,
-  checkContrastColor
+  SELECTEDCHANNEL,
+  getInitials
 } from 'src/stores/globalStates'
+import { checkContrastColor } from 'src/stores/globalStates'
 
 const safeMessages = computed(() => 
   MESSAGES.value.filter(m =>
@@ -108,6 +108,7 @@ async function leave() {
 
       // Set selected channel to none after deletion
       SELECTEDCHANNEL.value = null
+      MESSAGES.value = []
     } else {
       alert(data.message)
     }
@@ -122,63 +123,17 @@ async function loadMessages() {
   if(!channelId || isNaN(channelId))
     return
   
-  //if (!SELECTEDCHANNEL.value?.id)
-  //  return
-  
   try {
     const response = await api.get(`messages/${channelId}`)
+    // setMessages()
     MESSAGES.value = response.data
 
     console.log('response data', response.data)
     console.log('messages', MESSAGES.value)
-    
-
-    //console.log(MESSAGES.value)
-    //console.log(SELECTEDCHANNEL.value.id)
-    //console.log(SELECTEDCHANNEL.value.name)
-    //console.log(SELECTEDCHANNEL.value.color)
   } catch (err) {
     console.error('Error loading messages:', err)
   }
 }
-
-// const channelStore = useChannelStore()
-// const selectedChannel = computed(() => channelStore.selectedChannel)
-
-/* Infinite Scroll */
-
-//const hasMoreMessages = ref(true)
-//const currentPage = ref(1)
-
-// Reset pagination when channel changes
-/* watch(selectedChannel, () => {
-  currentPage.value = 1
-  hasMoreMessages.value = true
-})
-
-const loadMoreMessages = async (index, done) => {
-  if (!selectedChannel.value) {
-    done(true)
-    return
-  }
-
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const hasMore = currentPage.value < 5
-
-    if (!hasMore) {
-      hasMoreMessages.value = false
-      done(true)
-    } else {
-      currentPage.value++
-      done() // Continue watching
-    }
-  } catch (error) {
-    console.error('Error loading messages:', error)
-    done(true) // Stop on error
-  }
-}*/
 </script>
 
 <style lang="scss" scoped>

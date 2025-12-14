@@ -101,8 +101,6 @@ export function selectRandomColor() {
   return AVAILABLECOLORS[Math.floor(Math.random() * AVAILABLECOLORS.length)]
 }
 
-
-
 export async function createChannel(channelName, channelStatus) {
   let color = selectRandomColor()
 

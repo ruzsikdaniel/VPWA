@@ -150,25 +150,23 @@ function handleChannelUpdate(data){
   const {action, channelId, nickname} = data
 
   switch(action){
-    case 'joined':{
+    case 'joined':
       console.log('[WS] User joined channel: ', nickname)
       api.get(`/channels/get_channels/${NICKNAME.value}`)
         .then(response => {
           CHANNELS.value = response.data
         })
       break
-    }
 
-    case 'left':{
+    case 'left':
       console.log('[WS] User left: ', nickname)
       api.get(`/channels/get_channels/${NICKNAME.value}`)
         .then(response => {
           CHANNELS.value = response.data
         })
       break
-    }
 
-    case 'deleted':{
+    case 'deleted':
       // remove channelId from local channel storage 
       CHANNELS.value = CHANNELS.value.filter(ch => ch.id !== channelId)
       
@@ -177,9 +175,8 @@ function handleChannelUpdate(data){
         MESSAGES.value = []
       }
       break
-    }
 
-    case 'invited':{
+    case 'invited':
       // fetch channel list and push new channel
       console.log('[WS] Channel update: invite')
       api.get(`/channels/get_channels/${NICKNAME.value}`)
@@ -187,18 +184,13 @@ function handleChannelUpdate(data){
           CHANNELS.value = response.data
         })
       break
-    }
 
     case 'kicked':
-    case 'revoked': {
+    case 'revoked':{
       // TODO refine kicking logic
       console.log('NICKNAME', NICKNAME.value)
-
       const channel = CHANNELS.value.find(ch => ch.id === channelId)
-      if(!channel)
-        return
-
-      const channelName = channel.name
+      const channelName = channel?.name ?? 'unknown'
 
       console.log('found channel', channel)
       console.log('chanel name', channelName)

@@ -3,6 +3,7 @@ import KickVote from "#models/kick_vote"
 import User from "#models/user"
 import { getIO } from "#start/socket"
 import { HttpContext } from '@adonisjs/core/http'
+import { CHANNEL_ROLE } from "./channels_controller.js"
 
 export class KickController{
     public async kick({request}: HttpContext){
@@ -32,11 +33,11 @@ export class KickController{
             return {status: 403, message: 'User is not in the channel'}
         }
 
-        if(targetMember.role === 'admin'){
+        if(targetMember.role === CHANNEL_ROLE.ADMIN){
             return {status: 403, message: 'You cannot kick channel admin'}
         }
 
-        if(voterMember.role === 'admin'){
+        if(voterMember.role === CHANNEL_ROLE.ADMIN){
         await targetMember.delete()
 
         await KickVote.query()
@@ -100,6 +101,6 @@ export class KickController{
             return {status: 200, message: 'User kicked (3 votes reached)'}
         }
 
-        return {status: 200, message: `Kick vote registered (${votes}`}
+        return {status: 200, message: `Kick vote registered (${votes}/3)`}
     }
 }

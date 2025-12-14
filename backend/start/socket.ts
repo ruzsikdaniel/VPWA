@@ -135,7 +135,6 @@ async function handleChannelUpdate(socket: Socket, data: any){
     io!.to(String(channelId)).emit('event', {
         type: 'channelUpdate',
         data: {
-            // TODO: fill in actions for invite, kick, delete, leave
             action, 
             channelId, 
             nickname

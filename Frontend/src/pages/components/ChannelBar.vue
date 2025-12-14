@@ -73,14 +73,14 @@
 
 <script setup>
 import {
-  SELECTEDCHANNEL,
-  getInitials,
   CHANNELS,
   createChannel,
-  MESSAGES
+  checkContrastColor,
+  getInitials,
+  MESSAGES,
+  SELECTEDCHANNEL
 } from 'src/stores/globalStates'
 import { onMounted, ref, watch } from 'vue'
-import { checkContrastColor } from 'src/stores/globalStates'
 import { refreshChannels, selectChannel } from 'src/stores/channelStore'
 
 const showPopup = ref(false)
@@ -306,40 +306,6 @@ li div:first-child {
   font-weight: bold;
   font-size: 18px;
 }
-
-/* 
-.channel-bar li:nth-child(8n + 1) div:first-child {
-  background-color: var(--profile-red);
-}
-
-.channel-bar li:nth-child(8n + 2) div:first-child {
-  background-color: $profile-blue;
-}
-
-.channel-bar li:nth-child(8n + 3) div:first-child {
-  background-color: $profile-green;
-}
-
-.channel-bar li:nth-child(8n + 4) div:first-child {
-  background-color: $profile-pink;
-}
-
-.channel-bar li:nth-child(8n + 5) div:first-child {
-  background-color: $profile-orange;
-}
-
-.channel-bar li:nth-child(8n + 6) div:first-child {
-  background-color: $profile-light-blue;
-}
-
-.channel-bar li:nth-child(8n + 7) div:first-child {
-  background-color: $profile-yellow;
-}
-
-.channel-bar li:nth-child(8n + 8) div:first-child {
-  background-color: $profile-grey;
-}
-  */
 
 .create-channel {
   width: 100%;

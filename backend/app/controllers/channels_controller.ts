@@ -3,14 +3,31 @@ import Channel from '#models/channel'
 import ChannelUser from '#models/channel_user'
 import User from '#models/user'
 
+export const AVAILABLECOLORS = [
+  '#EF4444',
+  '#3B82F6',
+  '#22C55E',
+  '#EC4899',
+  '#F97316',
+  '#38BDF8',
+  '#FACC15',
+  '#6B7280',
+]
+
+export function selectRandomColor() {
+  return AVAILABLECOLORS[Math.floor(Math.random() * AVAILABLECOLORS.length)]
+}
+
+export const CHANNEL_ROLE = {
+    ADMIN: 'admin',
+    USER: 'user'
+}
+
 export default class ChannelsController {
 
   public async listForUser({ params }: HttpContext){
     const nickname = params.nickname
     const user = await User.findByOrFail('nickname', nickname)
-
-    if(!user)
-      return {status: 400, message: 'User does not exist'}
 
     const userChannels = await ChannelUser.query()
       .where('user_id', user.id)
@@ -49,7 +66,7 @@ export default class ChannelsController {
       await ChannelUser.create({  // create a new channel user
         userId: user.id,          // with the id of the creator
         channelId: channel.id,    // with the id of the channel
-        role: 'admin',            // and the 'admin' role
+        role: CHANNEL_ROLE.ADMIN,            // and the 'admin' role
       })
 
       return channel

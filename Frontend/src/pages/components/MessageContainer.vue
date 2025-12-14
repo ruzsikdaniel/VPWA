@@ -11,7 +11,6 @@
     <div>
       <div class="username">
         {{ message?.nickname || 'Unknown'}}
-        <!-- user.firstname + user.lastname -->
       </div>
       <div class="message-text" v-html="highlight(message?.msgText)"></div>
     </div>
@@ -20,7 +19,6 @@
 
 <script setup>
 import { checkContrastColor, getInitials } from 'src/stores/globalStates'
-//import { defineProps } from 'vue'
 
 const highlight = (text) => {
   if(!text || typeof text !== "string")
@@ -38,9 +36,7 @@ const props = defineProps({
   },
 })
 
-console.log(props)
-
-// format date code
+console.log(props)  // user props so ESLint does not complain
 </script>
 
 <style lang="scss" scoped>

@@ -40,9 +40,9 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { NICKNAME, SELECTEDCHANNEL } from 'src/stores/globalStates'
 import { sendWSMessage, sendTyping, joinWSChannel } from 'src/stores/ws'
 import { refreshChannels, selectChannel } from 'src/stores/channelStore'
+import { NICKNAME, SELECTEDCHANNEL } from 'src/stores/globalStates'
 
 const message = ref('')
 const showCommands = ref(false)
@@ -81,7 +81,6 @@ function handleKeydown(e) {
       e.preventDefault()
       if (filteredCommands.value[selectedCommandIndex.value]) {
         handleCommand(filteredCommands.value[selectedCommandIndex.value].name)
-        //selectCommand(filteredCommands.value[selectedCommandIndex.value])
       }
       return
     }
@@ -187,6 +186,7 @@ async function handleCommand(input) {
       
       break
     }
+
     case '/join':{
       console.log('joining...')
       const channelName = words[1]
@@ -317,7 +317,7 @@ async function handleCommand(input) {
       const channel = SELECTEDCHANNEL.value 
       console.log('channel id', channel.id) 
       console.log('nickname.value', NICKNAME.value)
-      await api.post('/channels/leave', {
+      await api.post('/channels/cancel', {
         channelId: channel.id,
         nickname: NICKNAME.value
       })
